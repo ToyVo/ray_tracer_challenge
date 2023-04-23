@@ -1,3 +1,5 @@
-pub mod tuple;
-pub mod color;
-pub mod canvas;
+mod tuple;
+pub use tuple::Tuple;
+
+mod matrix;
+pub use matrix::Matrix;

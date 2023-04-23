@@ -1,22 +1,21 @@
-use ray_tracer_challenge::tuple::Tuple;
-use ray_tracer_challenge::canvas::Canvas;
+use ray_tracer_challenge::{Matrix, Tuple};
 use std::fs::File;
 use std::io::Write;
 
 struct Projectile {
-    position: Tuple,
-    velocity: Tuple,
+    position: Tuple<f64>,
+    velocity: Tuple<f64>,
 }
 
 struct Environment {
-    gravity: Tuple,
-    wind: Tuple,
+    gravity: Tuple<f64>,
+    wind: Tuple<f64>,
 }
 
 fn tick(env: &Environment, proj: &Projectile) -> Projectile {
     Projectile {
-        position: proj.position + proj.velocity,
-        velocity: proj.velocity + env.gravity + env.wind,
+        position: proj.position.clone() + proj.velocity.clone(),
+        velocity: proj.velocity.clone() + env.gravity.clone() + env.wind.clone(),
     }
 }
 
@@ -33,19 +32,22 @@ fn main() {
     let width = 900;
     let height = 550;
     let mut positions = Vec::new();
-    while proj.position.y > 0.0 {
+    loop {
         proj = tick(&env, &proj);
-        let x = proj.position.x.round() as usize;
-        let y = height - proj.position.y.round() as usize;
+        let x = proj.position.x().round() as usize;
+        let y = height - proj.position.y().round() as usize;
+        if y >= height || x >= width {
+            break;
+        }
         println!("x: {}, y: {}", x, y);
         positions.push((x, y));
     }
 
     println!("Took {} ticks", positions.len());
-    let mut canvas = Canvas::new(width, height);
+    let mut canvas = Matrix::new(height, width, Tuple::color(0.0, 0.0, 0.0));
 
     positions.iter().for_each(|(x, y)| {
-        canvas.write_pixel(*x, *y, ray_tracer_challenge::color::Color::new(1.0, 0.0, 0.0));
+        canvas.set(*y, *x, Tuple::color(1.0, 0.0, 0.0));
     });
 
     // write the canvas to a file

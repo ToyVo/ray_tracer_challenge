@@ -1,103 +1,214 @@
-use std::ops::{Add, Mul, Sub, Div, Neg};
+use num::Num;
+use std::iter::Sum;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Tuple {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-    pub w: f64,
+#[derive(Clone, Debug, PartialEq)]
+pub struct Tuple<T> {
+    data: Vec<T>,
 }
 
-impl Tuple {
-    pub fn new(x: f64, y: f64, z: f64, w: f64) -> Tuple {
-        Tuple { x, y, z, w }
+impl<T> Tuple<T>
+where
+    T: Clone,
+{
+    pub fn new(dimension: usize, init: T) -> Self {
+        Self {
+            data: vec![init; dimension],
+        }
     }
 
-    pub fn point(x: f64, y: f64, z: f64) -> Tuple {
-        Tuple::new(x, y, z, 1.0)
+    pub fn from_vec(data: Vec<T>) -> Self {
+        Self { data }
     }
 
-    pub fn vector(x: f64, y: f64, z: f64) -> Tuple {
-        Tuple::new(x, y, z, 0.0)
+    pub fn dimension(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn set(&mut self, index: usize, value: T) {
+        assert!(index < self.dimension());
+        self.data[index] = value;
+    }
+}
+
+impl<T> Tuple<T>
+where
+    T: Copy + Clone,
+{
+    pub fn get(&self, index: usize) -> T {
+        assert!(index < self.dimension());
+        self.data[index]
+    }
+
+    pub fn r(&self) -> T {
+        self.data[0]
+    }
+
+    pub fn g(&self) -> T {
+        self.data[1]
+    }
+
+    pub fn b(&self) -> T {
+        self.data[2]
+    }
+
+    pub fn a(&self) -> T {
+        self.data[3]
+    }
+
+    pub fn x(&self) -> T {
+        self.data[0]
+    }
+
+    pub fn y(&self) -> T {
+        self.data[1]
+    }
+
+    pub fn z(&self) -> T {
+        self.data[2]
+    }
+
+    pub fn w(&self) -> T {
+        self.data[3]
+    }
+}
+
+impl<T> Tuple<T>
+where
+    T: Num + Copy + Clone,
+{
+    pub fn dot(&self, other: Self) -> T
+    where
+        T: Sum,
+    {
+        self.data
+            .iter()
+            .zip(other.data.iter())
+            .map(|(x, y)| *x * *y)
+            .sum()
+    }
+
+    pub fn color(r: T, g: T, b: T) -> Self {
+        Self::from_vec(vec![r, g, b])
+    }
+
+    pub fn point(x: T, y: T, z: T) -> Self {
+        Self::from_vec(vec![x, y, z, T::one()])
+    }
+
+    pub fn vector(x: T, y: T, z: T) -> Self {
+        Self::from_vec(vec![x, y, z, T::zero()])
     }
 
     pub fn is_point(&self) -> bool {
-        self.w == 1.0
+        self.data[3] == T::one()
     }
 
     pub fn is_vector(&self) -> bool {
-        self.w == 0.0
+        self.data[3] == T::zero()
     }
 
+    pub fn cross(&self, other: &Self) -> Self {
+        Self::vector(
+            self.y() * other.z() - self.z() * other.y(),
+            self.z() * other.x() - self.x() * other.z(),
+            self.x() * other.y() - self.y() * other.x(),
+        )
+    }
+}
+
+impl Tuple<f64> {
     pub fn magnitude(&self) -> f64 {
-        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt()
+        (self.data.iter().map(|x| x * x).sum::<f64>()).sqrt()
     }
 
-    pub fn normalize(&self) -> Tuple {
+    pub fn normalize(&self) -> Self {
         let magnitude = self.magnitude();
-        Tuple::new(self.x / magnitude, self.y / magnitude, self.z / magnitude, self.w / magnitude)
+        Self::from_vec(self.data.iter().map(|x| x / magnitude).collect())
     }
+}
 
-    pub fn dot(&self, other: Tuple) -> f64 {
-        self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
-    }
+impl<T> Add for Tuple<T>
+where
+    T: Num + Copy + Clone,
+{
+    type Output = Self;
 
-    pub fn cross(&self, other: &Tuple) -> Tuple {
-        Tuple::vector(
-            self.y * other.z - self.z * other.y,
-            self.z * other.x - self.x * other.z,
-            self.x * other.y - self.y * other.x,
+    fn add(self, other: Self) -> Self {
+        Self::from_vec(
+            self.data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(x, y)| *x + *y)
+                .collect(),
         )
     }
 }
 
-impl Add for Tuple {
-    type Output = Tuple;
+impl<T> Sub for Tuple<T>
+where
+    T: Num + Copy + Clone,
+{
+    type Output = Self;
 
-    fn add(self, other: Tuple) -> Tuple {
-        Tuple::new(
-            self.x + other.x,
-            self.y + other.y,
-            self.z + other.z,
-            self.w + other.w,
+    fn sub(self, other: Self) -> Self {
+        Self::from_vec(
+            self.data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(x, y)| *x - *y)
+                .collect(),
         )
     }
 }
 
-impl Sub for Tuple {
-    type Output = Tuple;
+impl<T> Neg for Tuple<T>
+where
+    T: Num + Copy + Clone + Neg<Output = T>,
+{
+    type Output = Self;
 
-    fn sub(self, other: Tuple) -> Tuple {
-        Tuple::new(
-            self.x - other.x,
-            self.y - other.y,
-            self.z - other.z,
-            self.w - other.w,
+    fn neg(self) -> Self {
+        Self::from_vec(self.data.iter().map(|x| -*x).collect())
+    }
+}
+
+impl<T> Mul<T> for Tuple<T>
+where
+    T: Num + Copy + Clone,
+{
+    type Output = Self;
+
+    fn mul(self, scalar: T) -> Self {
+        Self::from_vec(self.data.iter().map(|x| *x * scalar).collect())
+    }
+}
+
+impl<T> Mul<Tuple<T>> for Tuple<T>
+where
+    T: Num + Copy + Clone,
+{
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        Self::from_vec(
+            self.data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(x, y)| *x * *y)
+                .collect(),
         )
     }
 }
 
-impl Neg for Tuple {
-    type Output = Tuple;
+impl<T> Div<T> for Tuple<T>
+where
+    T: Num + Copy + Clone,
+{
+    type Output = Self;
 
-    fn neg(self) -> Tuple {
-        Tuple::new(-self.x, -self.y, -self.z, -self.w)
-    }
-}
-
-impl Mul<f64> for Tuple {
-    type Output = Tuple;
-
-    fn mul(self, scalar: f64) -> Tuple {
-        Tuple::new(self.x * scalar, self.y * scalar, self.z * scalar, self.w * scalar)
-    }
-}
-
-impl Div<f64> for Tuple {
-    type Output = Tuple;
-
-    fn div(self, scalar: f64) -> Tuple {
-        Tuple::new(self.x / scalar, self.y / scalar, self.z / scalar, self.w / scalar)
+    fn div(self, scalar: T) -> Self {
+        Self::from_vec(self.data.iter().map(|x| *x / scalar).collect())
     }
 }
 
@@ -107,13 +218,13 @@ mod tests {
 
     #[test]
     fn tuple_with_w_1_is_point() {
-        let a = Tuple::new(4.3, -4.2, 3.1, 1.0);
+        let a = Tuple::from_vec(vec![4.3, -4.2, 3.1, 1.0]);
         assert!(a.is_point());
     }
 
     #[test]
     fn tuple_with_w_0_is_vector() {
-        let a = Tuple::new(4.3, -4.2, 3.1, 0.0);
+        let a = Tuple::from_vec(vec![4.3, -4.2, 3.1, 0.0]);
         assert!(a.is_vector());
     }
 
@@ -131,23 +242,23 @@ mod tests {
 
     #[test]
     fn equality_with_identical_tuples() {
-        let a = Tuple::new(1.0, 2.0, 3.0, 4.0);
-        let b = Tuple::new(1.0, 2.0, 3.0, 4.0);
-        assert!(a == b);
+        let a = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+        let b = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(a, b);
     }
 
     #[test]
     fn equality_with_different_tuples() {
-        let a = Tuple::new(1.0, 2.0, 3.0, 4.0);
-        let b = Tuple::new(2.0, 3.0, 4.0, 5.0);
-        assert!(a != b);
+        let a = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+        let b = Tuple::from_vec(vec![2.0, 3.0, 4.0, 5.0]);
+        assert_ne!(a, b);
     }
 
     #[test]
     fn adding_two_tuples() {
-        let a1 = Tuple::new(3.0, -2.0, 5.0, 1.0);
-        let a2 = Tuple::new(-2.0, 3.0, 1.0, 0.0);
-        let expected = Tuple::new(1.0, 1.0, 6.0, 1.0);
+        let a1 = Tuple::from_vec(vec![3.0, -2.0, 5.0, 1.0]);
+        let a2 = Tuple::from_vec(vec![-2.0, 3.0, 1.0, 0.0]);
+        let expected = Tuple::from_vec(vec![1.0, 1.0, 6.0, 1.0]);
         assert_eq!(a1 + a2, expected);
     }
 
@@ -185,29 +296,29 @@ mod tests {
 
     #[test]
     fn negating_a_tuple() {
-        let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
-        let expected = Tuple::new(-1.0, 2.0, -3.0, 4.0);
+        let a = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
+        let expected = Tuple::from_vec(vec![-1.0, 2.0, -3.0, 4.0]);
         assert_eq!(-a, expected);
     }
 
     #[test]
     fn multiplying_tuple_by_scalar() {
-        let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
-        let expected = Tuple::new(3.5, -7.0, 10.5, -14.0);
+        let a = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
+        let expected = Tuple::from_vec(vec![3.5, -7.0, 10.5, -14.0]);
         assert_eq!(a * 3.5, expected);
     }
 
     #[test]
     fn multiplying_tuple_by_fraction() {
-        let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
-        let expected = Tuple::new(0.5, -1.0, 1.5, -2.0);
+        let a = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
+        let expected = Tuple::from_vec(vec![0.5, -1.0, 1.5, -2.0]);
         assert_eq!(a * 0.5, expected);
     }
 
     #[test]
     fn dividing_tuple_by_scalar() {
-        let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
-        let expected = Tuple::new(0.5, -1.0, 1.5, -2.0);
+        let a = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
+        let expected = Tuple::from_vec(vec![0.5, -1.0, 1.5, -2.0]);
         assert_eq!(a / 2.0, expected);
     }
 
@@ -232,13 +343,13 @@ mod tests {
     #[test]
     fn computing_magnitude_of_vector_1_2_3() {
         let v = Tuple::vector(1.0, 2.0, 3.0);
-        assert_eq!(v.magnitude(), (14.0 as f64).sqrt());
+        assert_eq!(v.magnitude(), 14.0_f64.sqrt());
     }
 
     #[test]
     fn computing_magnitude_of_vector_neg1_neg2_neg3() {
         let v = Tuple::vector(-1.0, -2.0, -3.0);
-        assert_eq!(v.magnitude(), (14.0 as f64).sqrt());
+        assert_eq!(v.magnitude(), 14.0_f64.sqrt());
     }
 
     #[test]
@@ -251,7 +362,11 @@ mod tests {
     #[test]
     fn normalizing_vector_1_2_3() {
         let v = Tuple::vector(1.0, 2.0, 3.0);
-        let expected = Tuple::vector(1.0 / (14.0 as f64).sqrt(), 2.0 / (14.0 as f64).sqrt(), 3.0 / (14.0 as f64).sqrt());
+        let expected = Tuple::vector(
+            1.0 / 14.0_f64.sqrt(),
+            2.0 / 14.0_f64.sqrt(),
+            3.0 / 14.0_f64.sqrt(),
+        );
         assert_eq!(v.normalize(), expected);
     }
 
@@ -279,4 +394,46 @@ mod tests {
         assert_eq!(b.cross(&a), expected_b);
     }
 
+    #[test]
+    fn creating_color() {
+        let c = Tuple::color(-0.5, 0.4, 1.7);
+        assert_eq!(c.r(), -0.5);
+        assert_eq!(c.g(), 0.4);
+        assert_eq!(c.b(), 1.7);
+    }
+
+    #[test]
+    fn adding_colors() {
+        let c1 = Tuple::color(0.9, 0.6, 0.75);
+        let c2 = Tuple::color(0.7, 0.1, 0.25);
+        assert_eq!(c1 + c2, Tuple::color(1.6, 0.7, 1.0));
+    }
+
+    #[test]
+    fn subtracting_colors() {
+        let c1 = Tuple::color(0.9, 0.6, 0.75);
+        let c2 = Tuple::color(0.7, 0.1, 0.25);
+        // check each component with a small epsilon
+        let result = c1 - c2;
+        assert!(result.r() - 0.2 < 0.00001);
+        assert!(result.g() - 0.5 < 0.00001);
+        assert!(result.b() - 0.5 < 0.00001);
+    }
+
+    #[test]
+    fn multiplying_color_by_scalar() {
+        let c = Tuple::color(0.2, 0.3, 0.4);
+        assert_eq!(c * 2.0, Tuple::color(0.4, 0.6, 0.8));
+    }
+
+    #[test]
+    fn multiplying_colors() {
+        let c1 = Tuple::color(1.0, 0.2, 0.4);
+        let c2 = Tuple::color(0.9, 1.0, 0.1);
+        // check each component with a small epsilon
+        let result = c1 * c2;
+        assert!(result.r() - 0.9 < 0.00001);
+        assert!(result.g() - 0.2 < 0.00001);
+        assert!(result.b() - 0.04 < 0.00001);
+    }
 }
