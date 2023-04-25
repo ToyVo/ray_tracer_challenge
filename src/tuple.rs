@@ -1,6 +1,7 @@
 use num::Num;
 use std::iter::Sum;
 use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::Matrix;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tuple<T> {
@@ -117,6 +118,23 @@ where
     }
 }
 
+impl<T> Tuple<T>
+where
+    T: Num + Copy + Clone + Mul<Output = T> + Sum,
+{
+    pub fn translate(self, x: T, y: T, z: T) -> Self {
+        Matrix::translation(x, y, z) * self
+    }
+
+    pub fn scale(self, x: T, y: T, z: T) -> Self {
+        Matrix::scaling(x, y, z) * self
+    }
+
+    pub fn shear(self, xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
+        Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
+    }
+}
+
 impl Tuple<f64> {
     pub fn magnitude(&self) -> f64 {
         (self.data.iter().map(|x| x * x).sum::<f64>()).sqrt()
@@ -125,6 +143,27 @@ impl Tuple<f64> {
     pub fn normalize(&self) -> Self {
         let magnitude = self.magnitude();
         Self::from_vec(self.data.iter().map(|x| x / magnitude).collect())
+    }
+
+    pub fn equals(&self, other: &Self, epsilon: f64) -> bool {
+        for (x, y) in self.data.iter().zip(other.data.iter()) {
+            if (x - y).abs() > epsilon {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn rotate_x(self, rad: f64) -> Self {
+        Matrix::rotation_x(rad) * self
+    }
+
+    pub fn rotate_y(self, rad: f64) -> Self {
+        Matrix::rotation_y(rad) * self
+    }
+
+    pub fn rotate_z(self, rad: f64) -> Self {
+        Matrix::rotation_z(rad) * self
     }
 }
 
@@ -413,11 +452,9 @@ mod tests {
     fn subtracting_colors() {
         let c1 = Tuple::color(0.9, 0.6, 0.75);
         let c2 = Tuple::color(0.7, 0.1, 0.25);
-        // check each component with a small epsilon
+        let expected = Tuple::color(0.2, 0.5, 0.5);
         let result = c1 - c2;
-        assert!(result.r() - 0.2 < 0.00001);
-        assert!(result.g() - 0.5 < 0.00001);
-        assert!(result.b() - 0.5 < 0.00001);
+        assert!(result.equals(&expected, 0.00001))
     }
 
     #[test]
@@ -430,10 +467,8 @@ mod tests {
     fn multiplying_colors() {
         let c1 = Tuple::color(1.0, 0.2, 0.4);
         let c2 = Tuple::color(0.9, 1.0, 0.1);
-        // check each component with a small epsilon
+        let expected = Tuple::color(0.9, 0.2, 0.04);
         let result = c1 * c2;
-        assert!(result.r() - 0.9 < 0.00001);
-        assert!(result.g() - 0.2 < 0.00001);
-        assert!(result.b() - 0.04 < 0.00001);
+        assert!(result.equals(&expected, 0.00001))
     }
 }

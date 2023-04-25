@@ -14,13 +14,13 @@ impl<T> Matrix<T>
 where
     T: Clone,
 {
-    pub fn new(rows: usize, cols: usize, init: T) -> Matrix<T> {
+    pub fn new(rows: usize, cols: usize, init: T) -> Self {
         let data = vec![init; rows * cols];
-        Matrix { data, rows, cols }
+        Self { data, rows, cols }
     }
 
-    pub fn from_vec(rows: usize, cols: usize, data: Vec<T>) -> Matrix<T> {
-        Matrix { data, rows, cols }
+    pub fn from_vec(rows: usize, cols: usize, data: Vec<T>) -> Self {
+        Self { data, rows, cols }
     }
 
     pub fn get(&self, row: usize, col: usize) -> T {
@@ -72,16 +72,43 @@ where
         result
     }
 
-    pub fn identity(size: usize) -> Matrix<T> {
-        let mut result = Matrix::new(size, size, T::zero());
+    pub fn identity(size: usize) -> Self {
+        let mut result = Self::new(size, size, T::zero());
         for i in 0..size {
             result.set(i, i, T::one());
         }
         result
     }
 
-    pub fn transpose(&self) -> Matrix<T> {
-        let mut result = Matrix::new(self.cols, self.rows, T::zero());
+    pub fn translation(x: T, y: T, z: T) -> Self {
+        let mut result = Self::identity(4);
+        result.set(0, 3, x);
+        result.set(1, 3, y);
+        result.set(2, 3, z);
+        result
+    }
+
+    pub fn scaling(x: T, y: T, z: T) -> Self {
+        let mut result = Self::identity(4);
+        result.set(0, 0, x);
+        result.set(1, 1, y);
+        result.set(2, 2, z);
+        result
+    }
+
+    pub fn shearing(xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
+        let mut result = Self::identity(4);
+        result.set(0, 1, xy);
+        result.set(0, 2, xz);
+        result.set(1, 0, yx);
+        result.set(1, 2, yz);
+        result.set(2, 0, zx);
+        result.set(2, 1, zy);
+        result
+    }
+
+    pub fn transpose(&self) -> Self {
+        let mut result = Self::new(self.cols, self.rows, T::zero());
         for row in 0..self.rows {
             for col in 0..self.cols {
                 result.set(col, row, self.get(row, col));
@@ -90,9 +117,9 @@ where
         result
     }
 
-    pub fn submatrix(&self, row: usize, col: usize) -> Matrix<T> {
+    pub fn submatrix(&self, row: usize, col: usize) -> Self {
         assert_eq!(self.rows, self.cols);
-        let mut result = Matrix::new(self.rows - 1, self.cols - 1, T::zero());
+        let mut result = Self::new(self.rows - 1, self.cols - 1, T::zero());
         for i in 0..self.rows {
             for j in 0..self.cols {
                 if i != row && j != col {
@@ -103,6 +130,23 @@ where
             }
         }
         result
+    }
+}
+
+impl<T> Matrix<T>
+where
+    T: Num + Copy + Clone + Mul<Output = T> + Sum,
+{
+    pub fn translate(self, x: T, y: T, z: T) -> Self {
+        Self::translation(x, y, z) * self
+    }
+
+    pub fn scale(self, x: T, y: T, z: T) -> Self {
+        Self::scaling(x, y, z) * self
+    }
+
+    pub fn shear(self, xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
+        Self::shearing(xy, xz, yx, yz, zx, zy) * self
     }
 }
 
@@ -143,7 +187,7 @@ where
 
 impl Matrix<f64> {
     pub fn inverse(&self) -> Self {
-        let mut result = Matrix::new(self.rows, self.cols, 0.);
+        let mut result = Self::new(self.rows, self.cols, 0.);
         let det = self.determinant();
         for row in 0..self.rows {
             for col in 0..self.cols {
@@ -163,17 +207,56 @@ impl Matrix<f64> {
         }
         true
     }
+
+    pub fn rotation_x(rad: f64) -> Self {
+        let mut result = Self::identity(4);
+        result.set(1, 1, f64::cos(rad));
+        result.set(1, 2, -f64::sin(rad));
+        result.set(2, 1, f64::sin(rad));
+        result.set(2, 2, f64::cos(rad));
+        result
+    }
+
+    pub fn rotation_y(rad: f64) -> Self {
+        let mut result = Self::identity(4);
+        result.set(0, 0, f64::cos(rad));
+        result.set(0, 2, f64::sin(rad));
+        result.set(2, 0, -f64::sin(rad));
+        result.set(2, 2, f64::cos(rad));
+        result
+    }
+
+    pub fn rotation_z(rad: f64) -> Self {
+        let mut result = Self::identity(4);
+        result.set(0, 0, f64::cos(rad));
+        result.set(0, 1, -f64::sin(rad));
+        result.set(1, 0, f64::sin(rad));
+        result.set(1, 1, f64::cos(rad));
+        result
+    }
+
+    pub fn rotate_x(self, rad: f64) -> Self {
+        Self::rotation_x(rad) * self
+    }
+
+    pub fn rotate_y(self, rad: f64) -> Self {
+        Self::rotation_y(rad) * self
+    }
+
+    pub fn rotate_z(self, rad: f64) -> Self {
+        Self::rotation_z(rad) * self
+    }
 }
 
 impl<T> Mul<Matrix<T>> for Matrix<T>
 where
     T: Num + Copy + Clone + Sum,
 {
-    type Output = Matrix<T>;
+    type Output = Self;
 
-    fn mul(self, other: Matrix<T>) -> Matrix<T> {
+    fn mul(self, other: Self) -> Self {
         assert_eq!(self.rows, other.cols);
-        let mut result = Matrix::new(other.rows, self.cols, T::zero());
+        let mut result = Self::new(other.rows, self.cols, T::zero());
         for row in 0..other.rows {
             for col in 0..self.cols {
                 let tuple_row = self.get_row(row);
@@ -240,6 +323,8 @@ impl std::fmt::Display for Matrix<Tuple<f64>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::SQRT_2;
+    use std::f64::consts::PI;
 
     #[test]
     fn constructing_4x4_matrix() {
@@ -569,6 +654,226 @@ mod tests {
         let result = c * b.inverse();
         let epsilon = 0.00000000000001;
         assert!(a.equals(&result, epsilon));
+    }
+
+    #[test]
+    fn multiplying_by_translation_matrix() {
+        let transform = Matrix::translation(5., -3., 2.);
+        let p = Tuple::point(-3., 4., 5.);
+        let expected = Tuple::point(2., 1., 7.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn multiplying_by_inverse_of_translation_matrix() {
+        let transform = Matrix::translation(5., -3., 2.);
+        let inv = transform.inverse();
+        let p = Tuple::point(-3., 4., 5.);
+        let expected = Tuple::point(-8., 7., 3.);
+        assert_eq!(inv * p, expected);
+    }
+
+    #[test]
+    fn translation_does_not_affect_vectors() {
+        let transform = Matrix::translation(5., -3., 2.);
+        let v = Tuple::vector(-3., 4., 5.);
+        assert_eq!(transform * v.clone(), v);
+    }
+
+    #[test]
+    fn scaling_matrix_applied_to_point() {
+        let transform = Matrix::scaling(2., 3., 4.);
+        let p = Tuple::point(-4., 6., 8.);
+        let expected = Tuple::point(-8., 18., 32.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn scaling_matrix_applied_to_vector() {
+        let transform = Matrix::scaling(2., 3., 4.);
+        let v = Tuple::vector(-4., 6., 8.);
+        let expected = Tuple::vector(-8., 18., 32.);
+        assert_eq!(transform * v, expected);
+    }
+
+    #[test]
+    fn multiplying_by_inverse_of_scaling_matrix() {
+        let transform = Matrix::scaling(2., 3., 4.);
+        let inv = transform.inverse();
+        let v = Tuple::vector(-4., 6., 8.);
+        let expected = Tuple::vector(-2., 2., 2.);
+        assert_eq!(inv * v, expected);
+    }
+
+    #[test]
+    fn reflection_is_scaling_by_negative_value() {
+        let transform = Matrix::scaling(-1., 1., 1.);
+        let p = Tuple::point(2., 3., 4.);
+        let expected = Tuple::point(-2., 3., 4.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn rotating_point_around_x_axis() {
+        let p = Tuple::point(0., 1., 0.);
+        let half_quarter = Matrix::rotation_x(PI / 4.);
+        let full_quarter = Matrix::rotation_x(PI / 2.);
+        let expected_half = Tuple::point(0., SQRT_2 / 2., SQRT_2 / 2.);
+        let expected_full = Tuple::point(0., 0., 1.);
+        let result_half = half_quarter * p.clone();
+        let result_full = full_quarter * p;
+        assert!(expected_half.equals(&result_half, 0.000001));
+        assert!(expected_full.equals(&result_full, 0.000001));
+    }
+
+    #[test]
+    fn inverse_of_x_rotation_rotates_in_opposite_direction() {
+        let p = Tuple::point(0., 1., 0.);
+        let half_quarter = Matrix::rotation_x(PI / 4.);
+        let inv = half_quarter.inverse();
+        let expected = Tuple::point(0., SQRT_2 / 2., -SQRT_2 / 2.);
+        let result = inv * p;
+        assert!(expected.equals(&result, 0.000001));
+    }
+
+    #[test]
+    fn rotating_point_around_y_axis() {
+        let p = Tuple::point(0., 0., 1.);
+        let half_quarter = Matrix::rotation_y(PI / 4.);
+        let full_quarter = Matrix::rotation_y(PI / 2.);
+        let expected_half = Tuple::point(SQRT_2 / 2., 0., SQRT_2 / 2.);
+        let expected_full = Tuple::point(1., 0., 0.);
+        let result_half = half_quarter * p.clone();
+        let result_full = full_quarter * p;
+        assert!(expected_half.equals(&result_half, 0.000001));
+        assert!(expected_full.equals(&result_full, 0.000001));
+    }
+
+    #[test]
+    fn rotating_point_around_z_axis() {
+        let p = Tuple::point(0., 1., 0.);
+        let half_quarter = Matrix::rotation_z(PI / 4.);
+        let full_quarter = Matrix::rotation_z(PI / 2.);
+        let expected_half = Tuple::point(-SQRT_2 / 2., SQRT_2 / 2., 0.);
+        let expected_full = Tuple::point(-1., 0., 0.);
+        let result_half = half_quarter * p.clone();
+        let result_full = full_quarter * p;
+        assert!(expected_half.equals(&result_half, 0.000001));
+        assert!(expected_full.equals(&result_full, 0.000001));
+    }
+
+    #[test]
+    fn shearing_transformation_moves_x_in_proportion_to_y() {
+        let transform = Matrix::shearing(1., 0., 0., 0., 0., 0.);
+        let p = Tuple::point(2., 3., 4.);
+        let expected = Tuple::point(5., 3., 4.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn shearing_transformation_moves_x_in_proportion_to_z() {
+        let transform = Matrix::shearing(0., 1., 0., 0., 0., 0.);
+        let p = Tuple::point(2., 3., 4.);
+        let expected = Tuple::point(6., 3., 4.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn shearing_transformation_moves_y_in_proportion_to_x() {
+        let transform = Matrix::shearing(0., 0., 1., 0., 0., 0.);
+        let p = Tuple::point(2., 3., 4.);
+        let expected = Tuple::point(2., 5., 4.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn shearing_transformation_moves_y_in_proportion_to_z() {
+        let transform = Matrix::shearing(0., 0., 0., 1., 0., 0.);
+        let p = Tuple::point(2., 3., 4.);
+        let expected = Tuple::point(2., 7., 4.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn shearing_transformation_moves_z_in_proportion_to_x() {
+        let transform = Matrix::shearing(0., 0., 0., 0., 1., 0.);
+        let p = Tuple::point(2., 3., 4.);
+        let expected = Tuple::point(2., 3., 6.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn shearing_transformation_moves_z_in_proportion_to_y() {
+        let transform = Matrix::shearing(0., 0., 0., 0., 0., 1.);
+        let p = Tuple::point(2., 3., 4.);
+        let expected = Tuple::point(2., 3., 7.);
+        assert_eq!(transform * p, expected);
+    }
+
+    #[test]
+    fn individual_transformations_are_applied_in_sequence() {
+        let p = Tuple::point(1., 0., 1.);
+        let a = Matrix::rotation_x(PI / 2.);
+        let b = Matrix::scaling(5., 5., 5.);
+        let c = Matrix::translation(10., 5., 7.);
+        let p2 = a * p;
+        assert!(Tuple::point(1., -1., 0.).equals(&p2, 0.000001));
+        let p3 = b * p2;
+        assert!(Tuple::point(5., -5., 0.).equals(&p3, 0.000001));
+        let p4 = c * p3;
+        assert_eq!(p4, Tuple::point(15., 0., 7.));
+    }
+
+    #[test]
+    fn fluent_translate() {
+        let transform = Matrix::identity(4).translate(10, 5, 7);
+        let result = Matrix::translation(10, 5, 7);
+        assert_eq!(transform, result);
+    }
+
+    #[test]
+    fn fluent_scale() {
+        let transform = Matrix::identity(4).scale(5, 5, 5);
+        let result = Matrix::scaling(5, 5, 5);
+        assert_eq!(transform, result);
+    }
+
+    #[test]
+    fn fluent_shear() {
+        let transform = Matrix::identity(4).shear(1,2,3,4,5,6);
+        let result = Matrix::shearing(1,2,3,4,5,6);
+        assert_eq!(transform, result);
+    }
+
+    #[test]
+    fn fluent_rotate_x() {
+        let transform = Matrix::identity(4).rotate_x(PI / 2.);
+        let result = Matrix::rotation_x(PI / 2.);
+        assert_eq!(transform, result);
+    }
+
+    #[test]
+    fn fluent_rotate_y() {
+        let transform = Matrix::identity(4).rotate_y(PI / 2.);
+        let result = Matrix::rotation_y(PI / 2.);
+        assert_eq!(transform, result);
+    }
+
+    #[test]
+    fn fluent_rotate_z() {
+        let transform = Matrix::identity(4).rotate_z(PI / 2.);
+        let result = Matrix::rotation_z(PI / 2.);
+        assert_eq!(transform, result);
+    }
+
+    #[test]
+    fn chained_transformations_must_be_applied_in_reverse_order() {
+        let p = Tuple::point(1., 0., 1.);
+        let a = Matrix::rotation_x(PI / 2.);
+        let b = Matrix::scaling(5., 5., 5.);
+        let c = Matrix::translation(10., 5., 7.);
+        let t = c * b * a;
+        assert_eq!(t * p, Tuple::point(15., 0., 7.));
     }
 
     #[test]
