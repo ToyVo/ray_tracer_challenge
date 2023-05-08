@@ -1,34 +1,29 @@
 use crate::Tuple;
-use num::Num;
-use std::iter::Sum;
-use std::ops::{Mul, Neg};
+use std::ops::Mul;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Matrix<T> {
-    data: Vec<T>,
+pub struct Matrix {
+    data: Vec<f64>,
     rows: usize,
     cols: usize,
 }
 
-impl<T> Matrix<T>
-where
-    T: Clone,
-{
-    pub fn new(rows: usize, cols: usize, init: T) -> Self {
+impl Matrix {
+    pub fn new(rows: usize, cols: usize, init: f64) -> Matrix {
         let data = vec![init; rows * cols];
-        Self { data, rows, cols }
+        Matrix { data, rows, cols }
     }
 
-    pub fn from_vec(rows: usize, cols: usize, data: Vec<T>) -> Self {
-        Self { data, rows, cols }
+    pub fn from_vec(rows: usize, cols: usize, data: Vec<f64>) -> Matrix {
+        Matrix { data, rows, cols }
     }
 
-    pub fn get(&self, row: usize, col: usize) -> T {
+    pub fn get(&self, row: usize, col: usize) -> f64 {
         assert!(row < self.rows && col < self.cols);
-        self.data[row * self.cols + col].clone()
+        self.data[row * self.cols + col]
     }
 
-    pub fn set(&mut self, row: usize, col: usize, value: T) {
+    pub fn set(&mut self, row: usize, col: usize, value: f64) {
         assert!(row < self.rows && col < self.cols);
         self.data[row * self.cols + col] = value;
     }
@@ -48,56 +43,51 @@ where
     pub fn height(&self) -> usize {
         self.rows
     }
-}
 
-impl<T> Matrix<T>
-where
-    T: Num + Copy + Clone,
-{
-    pub fn get_row(&self, row: usize) -> Tuple<T> {
+    pub fn get_row(&self, row: usize) -> Tuple {
         assert!(row < self.rows);
-        let mut result = Tuple::new(self.cols, T::zero());
+        let mut result = Tuple::new(self.cols, 0.);
         for col in 0..self.cols {
             result.set(col, self.get(row, col));
         }
         result
     }
 
-    pub fn get_col(&self, col: usize) -> Tuple<T> {
+    pub fn get_col(&self, col: usize) -> Tuple {
         assert!(col < self.cols);
-        let mut result = Tuple::new(self.rows, T::zero());
+        let mut result = Tuple::new(self.rows, 0.);
         for row in 0..self.rows {
             result.set(row, self.get(row, col));
         }
         result
     }
 
-    pub fn identity(size: usize) -> Self {
-        let mut result = Self::new(size, size, T::zero());
+    pub fn identity(size: usize) -> Matrix {
+        let mut result = Matrix::new(size, size, 0.);
         for i in 0..size {
-            result.set(i, i, T::one());
+            result.set(i, i, 1.);
         }
         result
     }
 
-    pub fn translation(x: T, y: T, z: T) -> Self {
-        let mut result = Self::identity(4);
+    pub fn translation(x: f64, y: f64, z: f64) -> Matrix {
+        let mut result = Matrix::identity(4);
         result.set(0, 3, x);
         result.set(1, 3, y);
         result.set(2, 3, z);
         result
     }
 
-    pub fn scaling(x: T, y: T, z: T) -> Self {
-        let mut result = Self::identity(4);
+    pub fn scaling(x: f64, y: f64, z: f64) -> Matrix {
+        let mut result = Matrix::identity(4);
         result.set(0, 0, x);
         result.set(1, 1, y);
         result.set(2, 2, z);
         result
     }
 
-    pub fn shearing(xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
-        let mut result = Self::identity(4);
+    pub fn shearing(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Matrix {
+        let mut result = Matrix::identity(4);
         result.set(0, 1, xy);
         result.set(0, 2, xz);
         result.set(1, 0, yx);
@@ -107,8 +97,8 @@ where
         result
     }
 
-    pub fn transpose(&self) -> Self {
-        let mut result = Self::new(self.cols, self.rows, T::zero());
+    pub fn transpose(&self) -> Matrix {
+        let mut result = Matrix::new(self.cols, self.rows, 0.);
         for row in 0..self.rows {
             for col in 0..self.cols {
                 result.set(col, row, self.get(row, col));
@@ -117,9 +107,9 @@ where
         result
     }
 
-    pub fn submatrix(&self, row: usize, col: usize) -> Self {
+    pub fn submatrix(&self, row: usize, col: usize) -> Matrix {
         assert_eq!(self.rows, self.cols);
-        let mut result = Self::new(self.rows - 1, self.cols - 1, T::zero());
+        let mut result = Matrix::new(self.rows - 1, self.cols - 1, 0.);
         for i in 0..self.rows {
             for j in 0..self.cols {
                 if i != row && j != col {
@@ -131,35 +121,25 @@ where
         }
         result
     }
-}
 
-impl<T> Matrix<T>
-where
-    T: Num + Copy + Clone + Mul<Output = T> + Sum,
-{
-    pub fn translate(self, x: T, y: T, z: T) -> Self {
-        Self::translation(x, y, z) * self
+    pub fn translate(&self, x: f64, y: f64, z: f64) -> Matrix {
+        Matrix::translation(x, y, z) * self
     }
 
-    pub fn scale(self, x: T, y: T, z: T) -> Self {
-        Self::scaling(x, y, z) * self
+    pub fn scale(&self, x: f64, y: f64, z: f64) -> Matrix {
+        Matrix::scaling(x, y, z) * self
     }
 
-    pub fn shear(self, xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
-        Self::shearing(xy, xz, yx, yz, zx, zy) * self
+    pub fn shear(&self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Matrix {
+        Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
     }
-}
 
-impl<T> Matrix<T>
-where
-    T: Num + Copy + Clone + Neg<Output = T>,
-{
-    pub fn determinant(&self) -> T {
+    pub fn determinant(&self) -> f64 {
         assert_eq!(self.rows, self.cols);
         if self.cols == 2 {
             self.get(0, 0) * self.get(1, 1) - self.get(0, 1) * self.get(1, 0)
         } else {
-            let mut det = T::zero();
+            let mut det = 0.;
             for col in 0..self.cols {
                 det = det + self.get(0, col) * self.cofactor(0, col);
             }
@@ -168,14 +148,14 @@ where
     }
 
     pub fn is_invertible(&self) -> bool {
-        self.determinant() != T::zero()
+        self.determinant() != 0.
     }
 
-    pub fn minor(&self, row: usize, col: usize) -> T {
+    pub fn minor(&self, row: usize, col: usize) -> f64 {
         self.submatrix(row, col).determinant()
     }
 
-    pub fn cofactor(&self, row: usize, col: usize) -> T {
+    pub fn cofactor(&self, row: usize, col: usize) -> f64 {
         let minor = self.minor(row, col);
         if (row + col) % 2 == 0 {
             minor
@@ -183,11 +163,9 @@ where
             -minor
         }
     }
-}
 
-impl Matrix<f64> {
-    pub fn inverse(&self) -> Self {
-        let mut result = Self::new(self.rows, self.cols, 0.);
+    pub fn inverse(&self) -> Matrix {
+        let mut result = Matrix::new(self.rows, self.cols, 0.);
         let det = self.determinant();
         for row in 0..self.rows {
             for col in 0..self.cols {
@@ -197,7 +175,7 @@ impl Matrix<f64> {
         result
     }
 
-    pub fn equals(&self, other: &Self, epsilon: f64) -> bool {
+    pub fn equals(&self, other: &Matrix, epsilon: f64) -> bool {
         for row in 0..self.rows {
             for col in 0..self.cols {
                 if (self.get(row, col) - other.get(row, col)).abs() > epsilon {
@@ -208,8 +186,8 @@ impl Matrix<f64> {
         true
     }
 
-    pub fn rotation_x(rad: f64) -> Self {
-        let mut result = Self::identity(4);
+    pub fn rotation_x(rad: f64) -> Matrix {
+        let mut result = Matrix::identity(4);
         result.set(1, 1, f64::cos(rad));
         result.set(1, 2, -f64::sin(rad));
         result.set(2, 1, f64::sin(rad));
@@ -217,8 +195,8 @@ impl Matrix<f64> {
         result
     }
 
-    pub fn rotation_y(rad: f64) -> Self {
-        let mut result = Self::identity(4);
+    pub fn rotation_y(rad: f64) -> Matrix {
+        let mut result = Matrix::identity(4);
         result.set(0, 0, f64::cos(rad));
         result.set(0, 2, f64::sin(rad));
         result.set(2, 0, -f64::sin(rad));
@@ -226,8 +204,8 @@ impl Matrix<f64> {
         result
     }
 
-    pub fn rotation_z(rad: f64) -> Self {
-        let mut result = Self::identity(4);
+    pub fn rotation_z(rad: f64) -> Matrix {
+        let mut result = Matrix::identity(4);
         result.set(0, 0, f64::cos(rad));
         result.set(0, 1, -f64::sin(rad));
         result.set(1, 0, f64::sin(rad));
@@ -235,96 +213,103 @@ impl Matrix<f64> {
         result
     }
 
-    pub fn rotate_x(self, rad: f64) -> Self {
-        Self::rotation_x(rad) * self
+    pub fn rotate_x(&self, rad: f64) -> Matrix {
+        Matrix::rotation_x(rad) * self
     }
 
-    pub fn rotate_y(self, rad: f64) -> Self {
-        Self::rotation_y(rad) * self
+    pub fn rotate_y(&self, rad: f64) -> Matrix {
+        Matrix::rotation_y(rad) * self
     }
 
-    pub fn rotate_z(self, rad: f64) -> Self {
-        Self::rotation_z(rad) * self
+    pub fn rotate_z(&self, rad: f64) -> Matrix {
+        Matrix::rotation_z(rad) * self
     }
 }
 
-impl<T> Mul<Matrix<T>> for Matrix<T>
-where
-    T: Num + Copy + Clone + Sum,
-{
-    type Output = Self;
+impl Mul<&Matrix> for &Matrix {
+    type Output = Matrix;
 
-    fn mul(self, other: Self) -> Self {
+    fn mul(self, other: &Matrix) -> Matrix {
         assert_eq!(self.rows, other.cols);
-        let mut result = Self::new(other.rows, self.cols, T::zero());
+        let mut result = Matrix::new(other.rows, self.cols, 0.);
         for row in 0..other.rows {
             for col in 0..self.cols {
                 let tuple_row = self.get_row(row);
                 let tuple_col = other.get_col(col);
-                result.set(row, col, tuple_col.dot(tuple_row));
+                result.set(row, col, tuple_col.dot(&tuple_row));
             }
         }
         result
     }
 }
 
-impl<T> Mul<Tuple<T>> for Matrix<T>
-where
-    T: Num + Copy + Clone + Sum,
-{
-    type Output = Tuple<T>;
+impl Mul<Matrix> for Matrix {
+    type Output = Matrix;
 
-    fn mul(self, other: Tuple<T>) -> Tuple<T> {
+    fn mul(self, other: Matrix) -> Matrix {
+        &self * &other
+    }
+}
+
+impl Mul<&Matrix> for Matrix {
+    type Output = Matrix;
+
+    fn mul(self, other: &Matrix) -> Matrix {
+        &self * other
+    }
+}
+
+impl Mul<Matrix> for &Matrix {
+    type Output = Matrix;
+
+    fn mul(self, other: Matrix) -> Matrix {
+        self * &other
+    }
+}
+
+impl Mul<&Tuple> for &Matrix {
+    type Output = Tuple;
+
+    fn mul(self, other: &Tuple) -> Tuple {
         assert_eq!(self.rows, other.dimension());
-        let mut result = Tuple::new(self.cols(), T::zero());
+        let mut result = Tuple::new(self.cols(), 0.);
         for row in 0..self.rows {
             let tuple_row = self.get_row(row);
-            result.set(row, other.dot(tuple_row));
+            result.set(row, other.dot(&tuple_row));
         }
         result
     }
 }
 
-impl std::fmt::Display for Matrix<Tuple<f64>> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut ppm = String::with_capacity(self.cols() * self.rows() * 12);
-        ppm.push_str("P3\n");
-        ppm.push_str(&format!("{} {}\n", self.cols(), self.rows()));
-        ppm.push_str("255\n");
+impl Mul<Tuple> for Matrix {
+    type Output = Tuple;
 
-        for row in 0..self.rows() {
-            let mut row_colors: Vec<u8> = Vec::with_capacity(self.cols() * 3);
-            for col in 0..self.cols() {
-                let color = self.get(row, col);
-                row_colors.push((color.r() * 255.0).round() as u8);
-                row_colors.push((color.g() * 255.0).round() as u8);
-                row_colors.push((color.b() * 255.0).round() as u8);
-            }
-            let mut row = String::new();
-            let mut line_length = 0;
-            for (_i, color) in row_colors.iter().enumerate() {
-                let color_str = format!("{} ", color);
-                let color_len = color_str.len();
-                if line_length + color_len > 70 {
-                    row = row.trim_end().to_string();
-                    row.push('\n');
-                    line_length = 0;
-                }
-                row.push_str(&color_str);
-                line_length += color_len;
-            }
-            ppm.push_str(row.trim_end());
-            ppm.push('\n');
-        }
-        write!(f, "{}", ppm)
+    fn mul(self, other: Tuple) -> Tuple {
+        &self * &other
+    }
+}
+
+impl Mul<&Tuple> for Matrix {
+    type Output = Tuple;
+
+    fn mul(self, other: &Tuple) -> Tuple {
+        &self * other
+    }
+}
+
+impl Mul<Tuple> for &Matrix {
+    type Output = Tuple;
+
+    fn mul(self, other: Tuple) -> Tuple {
+        self * &other
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::SQRT_2;
     use std::f64::consts::PI;
+    use std::f64::consts::SQRT_2;
 
     #[test]
     fn constructing_4x4_matrix() {
@@ -346,44 +331,80 @@ mod tests {
 
     #[test]
     fn constructing_2x2_matrix() {
-        let m = Matrix::from_vec(2, 2, vec![-3, 5, 1, -2]);
-        assert_eq!(m.get(0, 0), -3);
-        assert_eq!(m.get(0, 1), 5);
-        assert_eq!(m.get(1, 0), 1);
-        assert_eq!(m.get(1, 1), -2);
+        let m = Matrix::from_vec(2, 2, vec![-3., 5., 1., -2.]);
+        assert_eq!(m.get(0, 0), -3.);
+        assert_eq!(m.get(0, 1), 5.);
+        assert_eq!(m.get(1, 0), 1.);
+        assert_eq!(m.get(1, 1), -2.);
     }
 
     #[test]
     fn construction_3x3_matrix() {
-        let m = Matrix::from_vec(3, 3, vec![-3, 5, 0, 1, -2, -7, 0, 1, 1]);
-        assert_eq!(m.get(0, 0), -3);
-        assert_eq!(m.get(1, 1), -2);
-        assert_eq!(m.get(2, 2), 1);
+        let m = Matrix::from_vec(3, 3, vec![-3., 5., 0., 1., -2., -7., 0., 1., 1.]);
+        assert_eq!(m.get(0, 0), -3.);
+        assert_eq!(m.get(1, 1), -2.);
+        assert_eq!(m.get(2, 2), 1.);
     }
 
     #[test]
     fn matrix_equality_with_identical_matrices() {
-        let a = Matrix::from_vec(4, 4, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2]);
-        let b = Matrix::from_vec(4, 4, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2]);
+        let a = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                1., 2., 3., 4., 5., 6., 7., 8., 9., 8., 7., 6., 5., 4., 3., 2.,
+            ],
+        );
+        let b = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                1., 2., 3., 4., 5., 6., 7., 8., 9., 8., 7., 6., 5., 4., 3., 2.,
+            ],
+        );
         assert_eq!(a, b);
     }
 
     #[test]
     fn matrix_equality_with_different_matrices() {
-        let a = Matrix::from_vec(4, 4, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2]);
-        let b = Matrix::from_vec(4, 4, vec![2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+        let a = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                1., 2., 3., 4., 5., 6., 7., 8., 9., 8., 7., 6., 5., 4., 3., 2.,
+            ],
+        );
+        let b = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                2., 3., 4., 5., 6., 7., 8., 9., 8., 7., 6., 5., 4., 3., 2., 1.,
+            ],
+        );
         assert_ne!(a, b);
     }
 
     #[test]
     fn multiplying_two_matrices() {
-        let a = Matrix::from_vec(4, 4, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2]);
-        let b = Matrix::from_vec(4, 4, vec![-2, 1, 2, 3, 3, 2, 1, -1, 4, 3, 6, 5, 1, 2, 7, 8]);
+        let a = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                1., 2., 3., 4., 5., 6., 7., 8., 9., 8., 7., 6., 5., 4., 3., 2.,
+            ],
+        );
+        let b = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                -2., 1., 2., 3., 3., 2., 1., -1., 4., 3., 6., 5., 1., 2., 7., 8.,
+            ],
+        );
         let expected = Matrix::from_vec(
             4,
             4,
             vec![
-                20, 22, 50, 48, 44, 54, 114, 108, 40, 58, 110, 102, 16, 26, 46, 42,
+                20., 22., 50., 48., 44., 54., 114., 108., 40., 58., 110., 102., 16., 26., 46., 42.,
             ],
         );
         assert_eq!(a * b, expected);
@@ -405,15 +426,27 @@ mod tests {
 
     #[test]
     fn get_row_returns_correct_row() {
-        let a = Matrix::from_vec(4, 4, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6]);
-        let expected = Tuple::from_vec(vec![1, 2, 3, 4]);
+        let a = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                1., 2., 3., 4., 5., 6., 7., 8., 9., 0., 1., 2., 3., 4., 5., 6.,
+            ],
+        );
+        let expected = Tuple::from_vec(vec![1., 2., 3., 4.]);
         assert_eq!(a.get_row(0), expected);
     }
 
     #[test]
     fn get_col_returns_correct_col() {
-        let a = Matrix::from_vec(4, 4, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6]);
-        let expected = Tuple::from_vec(vec![1, 5, 9, 3]);
+        let a = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                1., 2., 3., 4., 5., 6., 7., 8., 9., 0., 1., 2., 3., 4., 5., 6.,
+            ],
+        );
+        let expected = Tuple::from_vec(vec![1., 5., 9., 3.]);
         assert_eq!(a.get_col(0), expected);
     }
 
@@ -422,34 +455,48 @@ mod tests {
         let a = Matrix::from_vec(
             4,
             4,
-            vec![0, 1, 2, 4, 1, 2, 4, 8, 2, 4, 8, 16, 4, 8, 16, 32],
+            vec![
+                0., 1., 2., 4., 1., 2., 4., 8., 2., 4., 8., 16., 4., 8., 16., 32.,
+            ],
         );
-        assert_eq!(a.clone() * Matrix::identity(4), a);
+        assert_eq!(&a * Matrix::identity(4), a);
     }
 
     #[test]
     fn transposing_matrix() {
-        let a = Matrix::from_vec(4, 4, vec![0, 9, 3, 0, 9, 8, 0, 8, 1, 8, 5, 3, 0, 0, 5, 8]);
-        let expected = Matrix::from_vec(4, 4, vec![0, 9, 1, 0, 9, 8, 8, 0, 3, 0, 5, 5, 0, 8, 3, 8]);
+        let a = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                0., 9., 3., 0., 9., 8., 0., 8., 1., 8., 5., 3., 0., 0., 5., 8.,
+            ],
+        );
+        let expected = Matrix::from_vec(
+            4,
+            4,
+            vec![
+                0., 9., 1., 0., 9., 8., 8., 0., 3., 0., 5., 5., 0., 8., 3., 8.,
+            ],
+        );
         assert_eq!(a.transpose(), expected);
     }
 
     #[test]
     fn transposing_identity_matrix() {
-        let a: Matrix<u8> = Matrix::identity(4);
+        let a = Matrix::identity(4);
         assert_eq!(a.transpose(), a);
     }
 
     #[test]
     fn calculating_determinant_of_2x2_matrix() {
-        let a = Matrix::from_vec(2, 2, vec![1, 5, -3, 2]);
-        assert_eq!(a.determinant(), 17);
+        let a = Matrix::from_vec(2, 2, vec![1., 5., -3., 2.]);
+        assert_eq!(a.determinant(), 17.);
     }
 
     #[test]
     fn submatrix_of_3x3_is_2x2() {
-        let a = Matrix::from_vec(3, 3, vec![1, 5, 0, -3, 2, 7, 0, 6, -3]);
-        let expected = Matrix::from_vec(2, 2, vec![-3, 2, 0, 6]);
+        let a = Matrix::from_vec(3, 3, vec![1., 5., 0., -3., 2., 7., 0., 6., -3.]);
+        let expected = Matrix::from_vec(2, 2, vec![-3., 2., 0., 6.]);
         assert_eq!(a.submatrix(0, 2), expected);
     }
 
@@ -458,36 +505,38 @@ mod tests {
         let a = Matrix::from_vec(
             4,
             4,
-            vec![-6, 1, 1, 6, -8, 5, 8, 6, -1, 0, 8, 2, -7, 1, -1, 1],
+            vec![
+                -6., 1., 1., 6., -8., 5., 8., 6., -1., 0., 8., 2., -7., 1., -1., 1.,
+            ],
         );
-        let expected = Matrix::from_vec(3, 3, vec![-6, 1, 6, -8, 8, 6, -7, -1, 1]);
+        let expected = Matrix::from_vec(3, 3, vec![-6., 1., 6., -8., 8., 6., -7., -1., 1.]);
         assert_eq!(a.submatrix(2, 1), expected);
     }
 
     #[test]
     fn calculating_minor_of_3x3_matrix() {
-        let a = Matrix::from_vec(3, 3, vec![1, 5, 0, 2, -1, -7, 6, -1, 5]);
+        let a = Matrix::from_vec(3, 3, vec![1., 5., 0., 2., -1., -7., 6., -1., 5.]);
         let b = a.submatrix(1, 0);
-        assert_eq!(b.determinant(), 25);
-        assert_eq!(a.minor(1, 0), 25);
+        assert_eq!(b.determinant(), 25.);
+        assert_eq!(a.minor(1, 0), 25.);
     }
 
     #[test]
     fn calculating_cofactor_of_3x3_matrix() {
-        let a = Matrix::from_vec(3, 3, vec![3, 5, 0, 2, -1, -7, 6, -1, 5]);
-        assert_eq!(a.minor(0, 0), -12);
-        assert_eq!(a.cofactor(0, 0), -12);
-        assert_eq!(a.minor(1, 0), 25);
-        assert_eq!(a.cofactor(1, 0), -25);
+        let a = Matrix::from_vec(3, 3, vec![3., 5., 0., 2., -1., -7., 6., -1., 5.]);
+        assert_eq!(a.minor(0, 0), -12.);
+        assert_eq!(a.cofactor(0, 0), -12.);
+        assert_eq!(a.minor(1, 0), 25.);
+        assert_eq!(a.cofactor(1, 0), -25.);
     }
 
     #[test]
     fn calculating_determinant_of_3x3_matrix() {
-        let a = Matrix::from_vec(3, 3, vec![1, 2, 6, -5, 8, -4, 2, 6, 4]);
-        assert_eq!(a.cofactor(0, 0), 56);
-        assert_eq!(a.cofactor(0, 1), 12);
-        assert_eq!(a.cofactor(0, 2), -46);
-        assert_eq!(a.determinant(), -196);
+        let a = Matrix::from_vec(3, 3, vec![1., 2., 6., -5., 8., -4., 2., 6., 4.]);
+        assert_eq!(a.cofactor(0, 0), 56.);
+        assert_eq!(a.cofactor(0, 1), 12.);
+        assert_eq!(a.cofactor(0, 2), -46.);
+        assert_eq!(a.determinant(), -196.);
     }
 
     #[test]
@@ -495,13 +544,15 @@ mod tests {
         let a = Matrix::from_vec(
             4,
             4,
-            vec![-2, -8, 3, 5, -3, 1, 7, 3, 1, 2, -9, 6, -6, 7, 7, -9],
+            vec![
+                -2., -8., 3., 5., -3., 1., 7., 3., 1., 2., -9., 6., -6., 7., 7., -9.,
+            ],
         );
-        assert_eq!(a.cofactor(0, 0), 690);
-        assert_eq!(a.cofactor(0, 1), 447);
-        assert_eq!(a.cofactor(0, 2), 210);
-        assert_eq!(a.cofactor(0, 3), 51);
-        assert_eq!(a.determinant(), -4071);
+        assert_eq!(a.cofactor(0, 0), 690.);
+        assert_eq!(a.cofactor(0, 1), 447.);
+        assert_eq!(a.cofactor(0, 2), 210.);
+        assert_eq!(a.cofactor(0, 3), 51.);
+        assert_eq!(a.determinant(), -4071.);
     }
 
     #[test]
@@ -509,9 +560,11 @@ mod tests {
         let a = Matrix::from_vec(
             4,
             4,
-            vec![6, 4, 4, 4, 5, 5, 7, 6, 4, -9, 3, -7, 9, 1, 7, -6],
+            vec![
+                6., 4., 4., 4., 5., 5., 7., 6., 4., -9., 3., -7., 9., 1., 7., -6.,
+            ],
         );
-        assert_eq!(a.determinant(), -2120);
+        assert_eq!(a.determinant(), -2120.);
         assert!(a.is_invertible());
     }
 
@@ -520,9 +573,11 @@ mod tests {
         let a = Matrix::from_vec(
             4,
             4,
-            vec![-4, 2, -2, -3, 9, 6, 2, 6, 0, -5, 1, -5, 0, 0, 0, 0],
+            vec![
+                -4., 2., -2., -3., 9., 6., 2., 6., 0., -5., 1., -5., 0., 0., 0., 0.,
+            ],
         );
-        assert_eq!(a.determinant(), 0);
+        assert_eq!(a.determinant(), 0.);
         assert!(!a.is_invertible());
     }
 
@@ -650,7 +705,7 @@ mod tests {
                 8., 2., 2., 2., 3., -1., 7., 0., 7., 0., 5., 4., 6., -2., 0., 5.,
             ],
         );
-        let c = a.clone() * b.clone();
+        let c = &a * &b;
         let result = c * b.inverse();
         let epsilon = 0.00000000000001;
         assert!(a.equals(&result, epsilon));
@@ -677,7 +732,7 @@ mod tests {
     fn translation_does_not_affect_vectors() {
         let transform = Matrix::translation(5., -3., 2.);
         let v = Tuple::vector(-3., 4., 5.);
-        assert_eq!(transform * v.clone(), v);
+        assert_eq!(transform * &v, v);
     }
 
     #[test]
@@ -720,7 +775,7 @@ mod tests {
         let full_quarter = Matrix::rotation_x(PI / 2.);
         let expected_half = Tuple::point(0., SQRT_2 / 2., SQRT_2 / 2.);
         let expected_full = Tuple::point(0., 0., 1.);
-        let result_half = half_quarter * p.clone();
+        let result_half = half_quarter * &p;
         let result_full = full_quarter * p;
         assert!(expected_half.equals(&result_half, 0.000001));
         assert!(expected_full.equals(&result_full, 0.000001));
@@ -743,7 +798,7 @@ mod tests {
         let full_quarter = Matrix::rotation_y(PI / 2.);
         let expected_half = Tuple::point(SQRT_2 / 2., 0., SQRT_2 / 2.);
         let expected_full = Tuple::point(1., 0., 0.);
-        let result_half = half_quarter * p.clone();
+        let result_half = half_quarter * &p;
         let result_full = full_quarter * p;
         assert!(expected_half.equals(&result_half, 0.000001));
         assert!(expected_full.equals(&result_full, 0.000001));
@@ -756,7 +811,7 @@ mod tests {
         let full_quarter = Matrix::rotation_z(PI / 2.);
         let expected_half = Tuple::point(-SQRT_2 / 2., SQRT_2 / 2., 0.);
         let expected_full = Tuple::point(-1., 0., 0.);
-        let result_half = half_quarter * p.clone();
+        let result_half = half_quarter * &p;
         let result_full = full_quarter * p;
         assert!(expected_half.equals(&result_half, 0.000001));
         assert!(expected_full.equals(&result_full, 0.000001));
@@ -826,22 +881,22 @@ mod tests {
 
     #[test]
     fn fluent_translate() {
-        let transform = Matrix::identity(4).translate(10, 5, 7);
-        let result = Matrix::translation(10, 5, 7);
+        let transform = Matrix::identity(4).translate(10., 5., 7.);
+        let result = Matrix::translation(10., 5., 7.);
         assert_eq!(transform, result);
     }
 
     #[test]
     fn fluent_scale() {
-        let transform = Matrix::identity(4).scale(5, 5, 5);
-        let result = Matrix::scaling(5, 5, 5);
+        let transform = Matrix::identity(4).scale(5., 5., 5.);
+        let result = Matrix::scaling(5., 5., 5.);
         assert_eq!(transform, result);
     }
 
     #[test]
     fn fluent_shear() {
-        let transform = Matrix::identity(4).shear(1,2,3,4,5,6);
-        let result = Matrix::shearing(1,2,3,4,5,6);
+        let transform = Matrix::identity(4).shear(1., 2., 3., 4., 5., 6.);
+        let result = Matrix::shearing(1., 2., 3., 4., 5., 6.);
         assert_eq!(transform, result);
     }
 
@@ -878,107 +933,35 @@ mod tests {
 
     #[test]
     fn portrait_matrix() {
-        let mut a = Matrix::new(5, 2, 0);
-        a.set(0, 0, 0);
-        a.set(0, 1, 1);
-        a.set(1, 0, 2);
-        a.set(1, 1, 3);
-        a.set(2, 0, 4);
-        a.set(2, 1, 5);
-        a.set(3, 0, 6);
-        a.set(3, 1, 7);
-        a.set(4, 0, 8);
-        a.set(4, 1, 9);
-        let expected = Matrix::from_vec(5, 2, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        let mut a = Matrix::new(5, 2, 0.);
+        a.set(0, 0, 0.);
+        a.set(0, 1, 1.);
+        a.set(1, 0, 2.);
+        a.set(1, 1, 3.);
+        a.set(2, 0, 4.);
+        a.set(2, 1, 5.);
+        a.set(3, 0, 6.);
+        a.set(3, 1, 7.);
+        a.set(4, 0, 8.);
+        a.set(4, 1, 9.);
+        let expected = Matrix::from_vec(5, 2, vec![0., 1., 2., 3., 4., 5., 6., 7., 8., 9.]);
         assert_eq!(a, expected);
     }
 
     #[test]
     fn landscape_matrix() {
-        let mut a = Matrix::new(2, 5, 0);
-        a.set(0, 0, 0);
-        a.set(0, 1, 1);
-        a.set(0, 2, 2);
-        a.set(0, 3, 3);
-        a.set(0, 4, 4);
-        a.set(1, 0, 5);
-        a.set(1, 1, 6);
-        a.set(1, 2, 7);
-        a.set(1, 3, 8);
-        a.set(1, 4, 9);
-        let expected = Matrix::from_vec(2, 5, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        let mut a = Matrix::new(2, 5, 0.);
+        a.set(0, 0, 0.);
+        a.set(0, 1, 1.);
+        a.set(0, 2, 2.);
+        a.set(0, 3, 3.);
+        a.set(0, 4, 4.);
+        a.set(1, 0, 5.);
+        a.set(1, 1, 6.);
+        a.set(1, 2, 7.);
+        a.set(1, 3, 8.);
+        a.set(1, 4, 9.);
+        let expected = Matrix::from_vec(2, 5, vec![0., 1., 2., 3., 4., 5., 6., 7., 8., 9.]);
         assert_eq!(a, expected);
-    }
-
-    #[test]
-    fn creating_canvas() {
-        let c = Matrix::new(20, 10, Tuple::color(0.0, 0.0, 0.0));
-        assert_eq!(c.width(), 10);
-        assert_eq!(c.height(), 20);
-    }
-
-    #[test]
-    fn writing_pixels_to_canvas() {
-        let mut c = Matrix::new(20, 10, Tuple::color(0.0, 0.0, 0.0));
-        let red = Tuple::color(1.0, 0.0, 0.0);
-        c.set(2, 3, red.clone());
-        assert_eq!(c.get(2, 3), red);
-    }
-
-    #[test]
-    fn constructing_ppm_header() {
-        let c = Matrix::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
-        let ppm = format!("{}", c);
-        let lines: Vec<&str> = ppm.split('\n').collect();
-        assert_eq!(lines[0], "P3");
-        assert_eq!(lines[1], "5 3");
-        assert_eq!(lines[2], "255");
-    }
-
-    #[test]
-    fn constructing_ppm_pixel_data() {
-        let mut c = Matrix::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
-        let c1 = Tuple::color(1.5, 0.0, 0.0);
-        let c2 = Tuple::color(0.0, 0.5, 0.0);
-        let c3 = Tuple::color(-0.5, 0.0, 1.0);
-        c.set(0, 0, c1);
-        c.set(1, 2, c2);
-        c.set(2, 4, c3);
-        let ppm = format!("{}", c);
-        let lines: Vec<&str> = ppm.split('\n').collect();
-        assert_eq!(lines[3], "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0");
-        assert_eq!(lines[4], "0 0 0 0 0 0 0 128 0 0 0 0 0 0 0");
-        assert_eq!(lines[5], "0 0 0 0 0 0 0 0 0 0 0 0 0 0 255");
-    }
-
-    #[test]
-    fn splitting_long_lines_in_ppm_files() {
-        let c = Matrix::new(2, 10, Tuple::color(1.0, 0.8, 0.6));
-        let ppm = format!("{}", c);
-        let lines: Vec<&str> = ppm.split('\n').collect();
-        assert_eq!(
-            lines[3],
-            "255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204"
-        );
-        assert_eq!(
-            lines[4],
-            "153 255 204 153 255 204 153 255 204 153 255 204 153"
-        );
-        assert_eq!(
-            lines[5],
-            "255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204"
-        );
-        assert_eq!(
-            lines[6],
-            "153 255 204 153 255 204 153 255 204 153 255 204 153"
-        );
-    }
-
-    #[test]
-    fn ppm_files_are_terminated_by_a_newline_character() {
-        let c = Matrix::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
-        let ppm = format!("{}", c);
-        let lines: Vec<&str> = ppm.split('\n').collect();
-        assert_eq!(lines[lines.len() - 1], "");
     }
 }

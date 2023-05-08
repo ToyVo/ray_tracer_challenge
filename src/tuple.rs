@@ -1,87 +1,103 @@
-use num::Num;
-use std::iter::Sum;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::Matrix;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Tuple<T> {
-    data: Vec<T>,
+pub struct Tuple {
+    data: Vec<f64>,
 }
 
-impl<T> Tuple<T>
-where
-    T: Clone,
-{
-    pub fn new(dimension: usize, init: T) -> Self {
-        Self {
+impl Tuple {
+    pub fn new(dimension: usize, init: f64) -> Tuple {
+        Tuple {
             data: vec![init; dimension],
         }
     }
 
-    pub fn from_vec(data: Vec<T>) -> Self {
-        Self { data }
+    pub fn from_vec(data: Vec<f64>) -> Tuple {
+        Tuple { data }
+    }
+
+    pub fn color(r: f64, g: f64, b: f64) -> Tuple {
+        Tuple::from_vec(vec![r, g, b])
+    }
+
+    pub fn point(x: f64, y: f64, z: f64) -> Tuple {
+        Tuple::from_vec(vec![x, y, z, 1.])
+    }
+
+    pub fn vector(x: f64, y: f64, z: f64) -> Tuple {
+        Tuple::from_vec(vec![x, y, z, 0.])
+    }
+
+    pub fn translate(&self, x: f64, y: f64, z: f64) -> Tuple {
+        Matrix::translation(x, y, z) * self
+    }
+
+    pub fn scale(&self, x: f64, y: f64, z: f64) -> Tuple {
+        Matrix::scaling(x, y, z) * self
+    }
+
+    pub fn shear(&self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Tuple {
+        Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
+    }
+
+    pub fn rotate_x(&self, rad: f64) -> Tuple {
+        Matrix::rotation_x(rad) * self
+    }
+
+    pub fn rotate_y(&self, rad: f64) -> Tuple {
+        Matrix::rotation_y(rad) * self
+    }
+
+    pub fn rotate_z(&self, rad: f64) -> Tuple {
+        Matrix::rotation_z(rad) * self
     }
 
     pub fn dimension(&self) -> usize {
         self.data.len()
     }
 
-    pub fn set(&mut self, index: usize, value: T) {
+    pub fn set(&mut self, index: usize, value: f64) {
         assert!(index < self.dimension());
         self.data[index] = value;
     }
-}
-
-impl<T> Tuple<T>
-where
-    T: Copy + Clone,
-{
-    pub fn get(&self, index: usize) -> T {
+    pub fn get(&self, index: usize) -> f64 {
         assert!(index < self.dimension());
         self.data[index]
     }
 
-    pub fn r(&self) -> T {
+    pub fn r(&self) -> f64 {
         self.data[0]
     }
 
-    pub fn g(&self) -> T {
+    pub fn g(&self) -> f64 {
         self.data[1]
     }
 
-    pub fn b(&self) -> T {
+    pub fn b(&self) -> f64 {
         self.data[2]
     }
 
-    pub fn a(&self) -> T {
+    pub fn a(&self) -> f64 {
         self.data[3]
     }
 
-    pub fn x(&self) -> T {
+    pub fn x(&self) -> f64 {
         self.data[0]
     }
 
-    pub fn y(&self) -> T {
+    pub fn y(&self) -> f64 {
         self.data[1]
     }
 
-    pub fn z(&self) -> T {
+    pub fn z(&self) -> f64 {
         self.data[2]
     }
 
-    pub fn w(&self) -> T {
+    pub fn w(&self) -> f64 {
         self.data[3]
     }
-}
-
-impl<T> Tuple<T>
-where
-    T: Num + Copy + Clone,
-{
-    pub fn dot(&self, other: Self) -> T
-    where
-        T: Sum,
-    {
+    pub fn dot(&self, other: &Tuple) -> f64 {
         self.data
             .iter()
             .zip(other.data.iter())
@@ -89,63 +105,32 @@ where
             .sum()
     }
 
-    pub fn color(r: T, g: T, b: T) -> Self {
-        Self::from_vec(vec![r, g, b])
-    }
-
-    pub fn point(x: T, y: T, z: T) -> Self {
-        Self::from_vec(vec![x, y, z, T::one()])
-    }
-
-    pub fn vector(x: T, y: T, z: T) -> Self {
-        Self::from_vec(vec![x, y, z, T::zero()])
-    }
-
     pub fn is_point(&self) -> bool {
-        self.data[3] == T::one()
+        self.w() == 1.
     }
 
     pub fn is_vector(&self) -> bool {
-        self.data[3] == T::zero()
+        self.w() == 0.
     }
 
-    pub fn cross(&self, other: &Self) -> Self {
-        Self::vector(
+    pub fn cross(&self, other: &Tuple) -> Tuple {
+        Tuple::vector(
             self.y() * other.z() - self.z() * other.y(),
             self.z() * other.x() - self.x() * other.z(),
             self.x() * other.y() - self.y() * other.x(),
         )
     }
-}
 
-impl<T> Tuple<T>
-where
-    T: Num + Copy + Clone + Mul<Output = T> + Sum,
-{
-    pub fn translate(self, x: T, y: T, z: T) -> Self {
-        Matrix::translation(x, y, z) * self
-    }
-
-    pub fn scale(self, x: T, y: T, z: T) -> Self {
-        Matrix::scaling(x, y, z) * self
-    }
-
-    pub fn shear(self, xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
-        Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
-    }
-}
-
-impl Tuple<f64> {
     pub fn magnitude(&self) -> f64 {
         (self.data.iter().map(|x| x * x).sum::<f64>()).sqrt()
     }
 
-    pub fn normalize(&self) -> Self {
+    pub fn normalize(&self) -> Tuple {
         let magnitude = self.magnitude();
-        Self::from_vec(self.data.iter().map(|x| x / magnitude).collect())
+        Tuple::from_vec(self.data.iter().map(|x| x / magnitude).collect())
     }
 
-    pub fn equals(&self, other: &Self, epsilon: f64) -> bool {
+    pub fn equals(&self, other: &Tuple, epsilon: f64) -> bool {
         for (x, y) in self.data.iter().zip(other.data.iter()) {
             if (x - y).abs() > epsilon {
                 return false;
@@ -153,45 +138,51 @@ impl Tuple<f64> {
         }
         true
     }
-
-    pub fn rotate_x(self, rad: f64) -> Self {
-        Matrix::rotation_x(rad) * self
-    }
-
-    pub fn rotate_y(self, rad: f64) -> Self {
-        Matrix::rotation_y(rad) * self
-    }
-
-    pub fn rotate_z(self, rad: f64) -> Self {
-        Matrix::rotation_z(rad) * self
-    }
 }
 
-impl<T> Add for Tuple<T>
-where
-    T: Num + Copy + Clone,
-{
-    type Output = Self;
+impl Add<&Tuple> for &Tuple {
+    type Output = Tuple;
 
-    fn add(self, other: Self) -> Self {
-        Self::from_vec(
+    fn add(self, other: &Tuple) -> Tuple {
+        Tuple::from_vec(
             self.data
                 .iter()
                 .zip(other.data.iter())
-                .map(|(x, y)| *x + *y)
+                .map(|(x, y)| x + y)
                 .collect(),
         )
     }
 }
 
-impl<T> Sub for Tuple<T>
-where
-    T: Num + Copy + Clone,
-{
-    type Output = Self;
+impl Add<Tuple> for Tuple {
+    type Output = Tuple;
 
-    fn sub(self, other: Self) -> Self {
-        Self::from_vec(
+    fn add(self, other: Tuple) -> Tuple {
+        &self + &other
+    }
+}
+
+impl Add<&Tuple> for Tuple {
+    type Output = Tuple;
+
+    fn add(self, other: &Tuple) -> Tuple {
+        &self + other
+    }
+}
+
+impl Add<Tuple> for &Tuple {
+    type Output = Tuple;
+
+    fn add(self, other: Tuple) -> Tuple {
+        self + &other
+    }
+}
+
+impl Sub<&Tuple> for &Tuple {
+    type Output = Tuple;
+
+    fn sub(self, other: &Tuple) -> Tuple {
+        Tuple::from_vec(
             self.data
                 .iter()
                 .zip(other.data.iter())
@@ -201,36 +192,67 @@ where
     }
 }
 
-impl<T> Neg for Tuple<T>
-where
-    T: Num + Copy + Clone + Neg<Output = T>,
-{
-    type Output = Self;
+impl Sub<Tuple> for Tuple {
+    type Output = Tuple;
 
-    fn neg(self) -> Self {
-        Self::from_vec(self.data.iter().map(|x| -*x).collect())
+    fn sub(self, other: Tuple) -> Tuple {
+        &self - &other
     }
 }
 
-impl<T> Mul<T> for Tuple<T>
-where
-    T: Num + Copy + Clone,
-{
-    type Output = Self;
+impl Sub<&Tuple> for Tuple {
+    type Output = Tuple;
 
-    fn mul(self, scalar: T) -> Self {
-        Self::from_vec(self.data.iter().map(|x| *x * scalar).collect())
+    fn sub(self, other: &Tuple) -> Tuple {
+        &self - other
     }
 }
 
-impl<T> Mul<Tuple<T>> for Tuple<T>
-where
-    T: Num + Copy + Clone,
-{
-    type Output = Self;
+impl Sub<Tuple> for &Tuple {
+    type Output = Tuple;
 
-    fn mul(self, other: Self) -> Self {
-        Self::from_vec(
+    fn sub(self, other: Tuple) -> Tuple {
+        self - &other
+    }
+}
+
+impl Neg for &Tuple {
+    type Output = Tuple;
+
+    fn neg(self) -> Tuple {
+        Tuple::from_vec(self.data.iter().map(|x| -*x).collect())
+    }
+}
+
+impl Neg for Tuple {
+    type Output = Tuple;
+
+    fn neg(self) -> Tuple {
+        -&self
+    }
+}
+
+impl Mul<f64> for &Tuple {
+    type Output = Tuple;
+
+    fn mul(self, scalar: f64) -> Tuple {
+        Tuple::from_vec(self.data.iter().map(|x| *x * scalar).collect())
+    }
+}
+
+impl Mul<f64> for Tuple {
+    type Output = Tuple;
+
+    fn mul(self, scalar: f64) -> Tuple {
+        &self * scalar
+    }
+}
+
+impl Mul<&Tuple> for &Tuple {
+    type Output = Tuple;
+
+    fn mul(self, other: &Tuple) -> Tuple {
+        Tuple::from_vec(
             self.data
                 .iter()
                 .zip(other.data.iter())
@@ -240,14 +262,43 @@ where
     }
 }
 
-impl<T> Div<T> for Tuple<T>
-where
-    T: Num + Copy + Clone,
-{
-    type Output = Self;
+impl Mul<Tuple> for Tuple {
+    type Output = Tuple;
 
-    fn div(self, scalar: T) -> Self {
-        Self::from_vec(self.data.iter().map(|x| *x / scalar).collect())
+    fn mul(self, other: Tuple) -> Tuple {
+        &self * &other
+    }
+}
+
+impl Mul<&Tuple> for Tuple {
+    type Output = Tuple;
+
+    fn mul(self, other: &Tuple) -> Tuple {
+        &self * other
+    }
+}
+
+impl Mul<Tuple> for &Tuple {
+    type Output = Tuple;
+
+    fn mul(self, other: Tuple) -> Tuple {
+        self * &other
+    }
+}
+
+impl Div<f64> for &Tuple {
+    type Output = Tuple;
+
+    fn div(self, scalar: f64) -> Tuple {
+        Tuple::from_vec(self.data.iter().map(|x| *x / scalar).collect())
+    }
+}
+
+impl Div<f64> for Tuple {
+    type Output = Tuple;
+
+    fn div(self, scalar: f64) -> Tuple {
+        &self / scalar
     }
 }
 
@@ -420,7 +471,7 @@ mod tests {
     fn dot_product_of_two_tuples() {
         let a = Tuple::vector(1.0, 2.0, 3.0);
         let b = Tuple::vector(2.0, 3.0, 4.0);
-        assert_eq!(a.dot(b), 20.0);
+        assert_eq!(a.dot(&b), 20.0);
     }
 
     #[test]

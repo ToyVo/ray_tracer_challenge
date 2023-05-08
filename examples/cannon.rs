@@ -1,21 +1,21 @@
-use ray_tracer_challenge::{Matrix, Tuple};
+use ray_tracer_challenge::{Canvas, Tuple};
 use std::fs::File;
 use std::io::Write;
 
 struct Projectile {
-    position: Tuple<f64>,
-    velocity: Tuple<f64>,
+    position: Tuple,
+    velocity: Tuple,
 }
 
 struct Environment {
-    gravity: Tuple<f64>,
-    wind: Tuple<f64>,
+    gravity: Tuple,
+    wind: Tuple,
 }
 
 fn tick(env: &Environment, proj: &Projectile) -> Projectile {
     Projectile {
-        position: proj.position.clone() + proj.velocity.clone(),
-        velocity: proj.velocity.clone() + env.gravity.clone() + env.wind.clone(),
+        position: &proj.position + &proj.velocity,
+        velocity: &proj.velocity + &env.gravity + &env.wind,
     }
 }
 
@@ -44,7 +44,7 @@ fn main() {
     }
 
     println!("Took {} ticks", positions.len());
-    let mut canvas = Matrix::new(height, width, Tuple::color(0.0, 0.0, 0.0));
+    let mut canvas = Canvas::new(height, width, Tuple::color(0.0, 0.0, 0.0));
 
     positions.iter().for_each(|(x, y)| {
         canvas.set(*y, *x, Tuple::color(1.0, 0.0, 0.0));
