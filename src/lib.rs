@@ -15,3 +15,9 @@ pub use sphere::Sphere;
 
 mod intersection;
 pub use intersection::Intersection;
+
+mod light;
+pub use light::Light;
+
+mod material;
+pub use material::Material;

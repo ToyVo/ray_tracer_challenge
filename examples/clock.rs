@@ -11,21 +11,16 @@ fn main() {
         size as f64 / 2.,
         0.,
     );
-    let mut positions = Vec::new();
+    let mut canvas = Canvas::new(size, size, Tuple::color(0.0, 0.0, 0.0));
+
     for i in 0..12 {
         let point = start.rotate_z((i as f64 * PI) / 6.0);
         let result = &transform * point;
         println!("{:?}", result);
         let x = result.x().round() as usize;
         let y = result.y().round() as usize;
-        positions.push((x, y));
+        canvas.set(y, x, Tuple::color(1.0, 0.0, 0.0));
     }
-
-    let mut canvas = Canvas::new(size, size, Tuple::color(0.0, 0.0, 0.0));
-
-    positions.iter().for_each(|(x, y)| {
-        canvas.set(*y, *x, Tuple::color(1.0, 0.0, 0.0));
-    });
 
     // write the canvas to a file
     let mut file = File::create("clock.ppm").unwrap();

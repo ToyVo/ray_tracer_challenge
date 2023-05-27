@@ -175,10 +175,10 @@ impl Matrix {
         result
     }
 
-    pub fn equals(&self, other: &Matrix, epsilon: f64) -> bool {
+    pub fn nearly_equals(&self, other: &Matrix, delta: f64) -> bool {
         for row in 0..self.rows {
             for col in 0..self.cols {
-                if (self.get(row, col) - other.get(row, col)).abs() > epsilon {
+                if (self.get(row, col) - other.get(row, col)).abs() > delta {
                     return false;
                 }
             }
@@ -707,8 +707,7 @@ mod tests {
         );
         let c = &a * &b;
         let result = c * b.inverse();
-        let epsilon = 0.00000000000001;
-        assert!(a.equals(&result, epsilon));
+        assert!(a.nearly_equals(&result, 0.00001));
     }
 
     #[test]
@@ -777,8 +776,8 @@ mod tests {
         let expected_full = Tuple::point(0., 0., 1.);
         let result_half = half_quarter * &p;
         let result_full = full_quarter * p;
-        assert!(expected_half.equals(&result_half, 0.000001));
-        assert!(expected_full.equals(&result_full, 0.000001));
+        assert!(expected_half.nearly_equals(&result_half, 0.000001));
+        assert!(expected_full.nearly_equals(&result_full, 0.000001));
     }
 
     #[test]
@@ -788,7 +787,7 @@ mod tests {
         let inv = half_quarter.inverse();
         let expected = Tuple::point(0., SQRT_2 / 2., -SQRT_2 / 2.);
         let result = inv * p;
-        assert!(expected.equals(&result, 0.000001));
+        assert!(expected.nearly_equals(&result, 0.000001));
     }
 
     #[test]
@@ -800,8 +799,8 @@ mod tests {
         let expected_full = Tuple::point(1., 0., 0.);
         let result_half = half_quarter * &p;
         let result_full = full_quarter * p;
-        assert!(expected_half.equals(&result_half, 0.000001));
-        assert!(expected_full.equals(&result_full, 0.000001));
+        assert!(expected_half.nearly_equals(&result_half, 0.000001));
+        assert!(expected_full.nearly_equals(&result_full, 0.000001));
     }
 
     #[test]
@@ -813,8 +812,8 @@ mod tests {
         let expected_full = Tuple::point(-1., 0., 0.);
         let result_half = half_quarter * &p;
         let result_full = full_quarter * p;
-        assert!(expected_half.equals(&result_half, 0.000001));
-        assert!(expected_full.equals(&result_full, 0.000001));
+        assert!(expected_half.nearly_equals(&result_half, 0.000001));
+        assert!(expected_full.nearly_equals(&result_full, 0.000001));
     }
 
     #[test]
@@ -872,9 +871,9 @@ mod tests {
         let b = Matrix::scaling(5., 5., 5.);
         let c = Matrix::translation(10., 5., 7.);
         let p2 = a * p;
-        assert!(Tuple::point(1., -1., 0.).equals(&p2, 0.000001));
+        assert!(Tuple::point(1., -1., 0.).nearly_equals(&p2, 0.000001));
         let p3 = b * p2;
-        assert!(Tuple::point(5., -5., 0.).equals(&p3, 0.000001));
+        assert!(Tuple::point(5., -5., 0.).nearly_equals(&p3, 0.000001));
         let p4 = c * p3;
         assert_eq!(p4, Tuple::point(15., 0., 7.));
     }

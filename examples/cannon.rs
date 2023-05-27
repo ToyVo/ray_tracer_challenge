@@ -28,10 +28,11 @@ fn main() {
         gravity: Tuple::vector(0.0, -0.1, 0.0),
         wind: Tuple::vector(-0.01, 0.0, 0.0),
     };
-
     let width = 900;
     let height = 550;
-    let mut positions = Vec::new();
+    let mut ticks = 0;
+    let mut canvas = Canvas::new(height, width, Tuple::color(0.0, 0.0, 0.0));
+
     loop {
         proj = tick(&env, &proj);
         let x = proj.position.x().round() as usize;
@@ -40,15 +41,11 @@ fn main() {
             break;
         }
         println!("x: {}, y: {}", x, y);
-        positions.push((x, y));
+        canvas.set(y, x, Tuple::color(1.0, 0.0, 0.0));
+        ticks += 1;
     }
 
-    println!("Took {} ticks", positions.len());
-    let mut canvas = Canvas::new(height, width, Tuple::color(0.0, 0.0, 0.0));
-
-    positions.iter().for_each(|(x, y)| {
-        canvas.set(*y, *x, Tuple::color(1.0, 0.0, 0.0));
-    });
+    println!("Took {} ticks", ticks);
 
     // write the canvas to a file
     let mut file = File::create("cannon.ppm").unwrap();

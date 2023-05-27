@@ -53,6 +53,10 @@ impl Tuple {
         Matrix::rotation_z(rad) * self
     }
 
+    pub fn to_vector(&self) -> Tuple {
+        Tuple::from_vec(self.data.iter().enumerate().map(|(i,&v)| if i == self.data.len() -1 { 0. } else { v }).collect())
+    }
+
     pub fn dimension(&self) -> usize {
         self.data.len()
     }
@@ -130,13 +134,17 @@ impl Tuple {
         Tuple::from_vec(self.data.iter().map(|x| x / magnitude).collect())
     }
 
-    pub fn equals(&self, other: &Tuple, epsilon: f64) -> bool {
+    pub fn nearly_equals(&self, other: &Tuple, delta: f64) -> bool {
         for (x, y) in self.data.iter().zip(other.data.iter()) {
-            if (x - y).abs() > epsilon {
+            if (x - y).abs() > delta {
                 return false;
             }
         }
         true
+    }
+
+    pub fn reflect(&self, normal: &Tuple) -> Tuple {
+        self - &(normal * 2. * self.dot(normal))
     }
 }
 
@@ -505,7 +513,7 @@ mod tests {
         let c2 = Tuple::color(0.7, 0.1, 0.25);
         let expected = Tuple::color(0.2, 0.5, 0.5);
         let result = c1 - c2;
-        assert!(result.equals(&expected, 0.00001))
+        assert!(result.nearly_equals(&expected, 0.00001))
     }
 
     #[test]
@@ -520,6 +528,31 @@ mod tests {
         let c2 = Tuple::color(0.9, 1.0, 0.1);
         let expected = Tuple::color(0.9, 0.2, 0.04);
         let result = c1 * c2;
-        assert!(result.equals(&expected, 0.00001))
+        assert!(result.nearly_equals(&expected, 0.00001))
+    }
+
+    #[test]
+    fn to_vector_makes_the_last_element_0() {
+        let a = Tuple::point(1.,2.,3.,);
+        let expected = Tuple::vector(1.,2.,3.,);
+        assert_eq!(a.to_vector(), expected);
+    }
+
+    #[test]
+    fn reflect_vector_approaching_at_45_degrees() {
+        let v = Tuple::vector(1.,-1.,0.);
+        let n = Tuple::vector(0.,1.,0.);
+        let r = v.reflect(&n);
+        let expected = Tuple::vector(1.,1.,0.);
+        assert_eq!(r, expected);
+    }
+
+    #[test]
+    fn reflect_vector_off_slanted_surface() {
+        let v = Tuple::vector(0.,-1.,0.);
+        let n = Tuple::vector(2.0_f64.sqrt()/2.,2.0_f64.sqrt()/2.,0.);
+        let r = v.reflect(&n);
+        let expected = Tuple::vector(1.,0.,0.);
+        assert!(r.nearly_equals(&expected, 0.00001));
     }
 }
