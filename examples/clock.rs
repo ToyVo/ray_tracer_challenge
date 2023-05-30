@@ -1,7 +1,6 @@
-use ray_tracer_challenge::{Canvas, Matrix, Tuple};
 use std::f64::consts::PI;
-use std::fs::File;
-use std::io::Write;
+
+use ray_tracer_challenge::{Canvas, Matrix, Tuple};
 
 fn main() {
     let size = 512;

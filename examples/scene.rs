@@ -1,5 +1,6 @@
-use ray_tracer_challenge::{Sphere, Matrix, Tuple, World, Light, Camera, view_transform};
 use std::f64::consts::PI;
+
+use ray_tracer_challenge::{Camera, Light, Matrix, Sphere, Tuple, view_transform, World};
 
 fn main() {
     let mut floor = Sphere::new();

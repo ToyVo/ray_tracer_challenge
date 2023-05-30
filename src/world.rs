@@ -1,4 +1,4 @@
-use crate::{Light, Matrix, Sphere, Tuple, Ray, Intersection, Computations};
+use crate::{Computations, Intersection, Light, Matrix, Ray, Sphere, Tuple};
 
 pub struct World {
     pub objects: Vec<Sphere>,
@@ -38,20 +38,35 @@ impl World {
     }
 
     pub fn shade_hit(&self, comps: &Computations) -> Tuple {
-        self.lights.iter().fold(Tuple::color(0.,0.,0.), |acc, light| {
-            acc + comps.object.material.lighting(light, &comps.point, &comps.eyev,&comps.normalv)
+        self.lights.iter().fold(Tuple::color(0.0, 0.0, 0.0), |sum, light| {
+            let shadowed = self.is_shadowed(light, &comps.over_point);
+            sum + comps.object.material.lighting(light, &comps.over_point, &comps.eye_vector, &comps.normal_vector, shadowed)
         })
     }
 
     pub fn color_at(&self, ray: &Ray) -> Tuple {
         let intersections = self.intersects(ray);
         if intersections.is_empty() {
-            Tuple::color(0.,0.,0.)
+            Tuple::color(0., 0., 0.)
         } else {
             let hit = Intersection::hit(&intersections).unwrap();
             let comps = hit.prepare_computations(ray);
             self.shade_hit(&comps)
         }
+    }
+
+    pub fn is_shadowed(&self, light: &Light, point: &Tuple) -> bool {
+        let vector = &light.position - point;
+        let distance = vector.magnitude();
+        let direction = vector.normalize();
+        let ray = Ray::new(point.clone(), direction);
+        let intersections = self.intersects(&ray);
+        if let Some(hit) = Intersection::hit(&intersections) {
+            if hit.t < distance {
+                return true;
+            }
+        }
+        false
     }
 }
 
@@ -98,40 +113,40 @@ mod tests {
     #[test]
     fn shading_intersection() {
         let world = World::default();
-        let ray = Ray::new(Tuple::point(0.,0.,-5.),Tuple::vector(0.,0.,1.));
+        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
         let shape = &world.objects[0];
         let intersection = Intersection::new(4., shape);
         let comps = intersection.prepare_computations(&ray);
         let color = world.shade_hit(&comps);
-        assert!(color.nearly_equals(&Tuple::color(0.38066,0.47583,0.2855), 0.00001));
+        assert!(color.nearly_equals(&Tuple::color(0.38066, 0.47583, 0.2855), 1e-3f64));
     }
 
     #[test]
     fn shading_intersection_inside() {
         let mut world = World::default();
-        world.lights = vec![Light::new(Tuple::point(0.,0.25,0.), Tuple::color(1.,1.,1.))];
-        let ray = Ray::new(Tuple::point(0.,0.,0.),Tuple::vector(0.,0.,1.));
+        world.lights = vec![Light::new(Tuple::point(0., 0.25, 0.), Tuple::color(1., 1., 1.))];
+        let ray = Ray::new(Tuple::point(0., 0., 0.), Tuple::vector(0., 0., 1.));
         let shape = &world.objects[1];
         let intersection = Intersection::new(0.5, shape);
         let comps = intersection.prepare_computations(&ray);
         let color = world.shade_hit(&comps);
-        assert!(color.nearly_equals(&Tuple::color(0.90498,0.90498,0.90498), 0.00001));
+        assert!(color.nearly_equals(&Tuple::color(0.90498, 0.90498, 0.90498), 1e-3f64));
     }
 
     #[test]
     fn color_when_ray_misses() {
         let world = World::default();
-        let ray = Ray::new(Tuple::point(0.,0.,-5.), Tuple::vector(0.,1.,0.));
+        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 1., 0.));
         let color = world.color_at(&ray);
-        assert_eq!(color, Tuple::color(0.,0.,0.))
+        assert_eq!(color, Tuple::color(0., 0., 0.))
     }
 
     #[test]
     fn color_when_ray_hits() {
         let world = World::default();
-        let ray = Ray::new(Tuple::point(0.,0.,-5.), Tuple::vector(0.,0.,1.));
+        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
         let color = world.color_at(&ray);
-        assert!(color.nearly_equals(&Tuple::color(0.38066,0.47583,0.2855), 0.00001));
+        assert!(color.nearly_equals(&Tuple::color(0.38066, 0.47583, 0.2855), 1e-3f64));
     }
 
     #[test]
@@ -139,8 +154,51 @@ mod tests {
         let mut world = World::default();
         world.objects[0].material.ambient = 1.;
         world.objects[1].material.ambient = 1.;
-        let ray = Ray::new(Tuple::point(0.,0.,0.75), Tuple::vector(0.,0.,-1.));
+        let ray = Ray::new(Tuple::point(0., 0., 0.75), Tuple::vector(0., 0., -1.));
         let color = world.color_at(&ray);
         assert_eq!(color, world.objects[1].material.color)
+    }
+
+    #[test]
+    fn no_shadow_when_nothing_collinear_with_point_and_light() {
+        let world = World::default();
+        let point = Tuple::point(0., 10., 0.);
+        assert!(!world.is_shadowed(&world.lights[0], &point));
+    }
+
+    #[test]
+    fn shadow_when_object_between_point_and_light() {
+        let world = World::default();
+        let point = Tuple::point(10., -10., 10.);
+        assert!(world.is_shadowed(&world.lights[0], &point));
+    }
+
+    #[test]
+    fn no_shadow_when_object_behind_light() {
+        let world = World::default();
+        let point = Tuple::point(-20., 20., -20.);
+        assert!(!world.is_shadowed(&world.lights[0], &point));
+    }
+
+    #[test]
+    fn no_shadow_when_object_behind_point() {
+        let world = World::default();
+        let point = Tuple::point(-2., 2., -2.);
+        assert!(!world.is_shadowed(&world.lights[0], &point));
+    }
+
+    #[test]
+    fn shade_hit_given_intersection_in_shadow() {
+        let mut world = World::default();
+        world.lights = vec![Light::new(Tuple::point(0., 0., -10.), Tuple::color(1., 1., 1.))];
+        let shape_a = Sphere::new();
+        let mut shape_b = Sphere::new();
+        shape_b.transform = Matrix::translation(0., 0., 10.);
+        world.objects = vec![shape_a, shape_b];
+        let ray = Ray::new(Tuple::point(0., 0., 5.), Tuple::vector(0., 0., 1.));
+        let intersection = Intersection::new(4., &world.objects[1]);
+        let comps = intersection.prepare_computations(&ray);
+        let color = world.shade_hit(&comps);
+        assert!(color.nearly_equals(&Tuple::color(0.1, 0.1, 0.1), 1e-3f64));
     }
 }

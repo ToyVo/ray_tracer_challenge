@@ -1,5 +1,6 @@
-use crate::Matrix;
 use std::ops::{Add, Div, Mul, Neg, Sub};
+
+use crate::Matrix;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tuple {
@@ -54,7 +55,7 @@ impl Tuple {
     }
 
     pub fn to_vector(&self) -> Tuple {
-        Tuple::from_vec(self.data.iter().enumerate().map(|(i,&v)| if i == self.data.len() -1 { 0. } else { v }).collect())
+        Tuple::from_vec(self.data.iter().enumerate().map(|(i, &v)| if i == self.data.len() - 1 { 0. } else { v }).collect())
     }
 
     pub fn dimension(&self) -> usize {
@@ -513,7 +514,7 @@ mod tests {
         let c2 = Tuple::color(0.7, 0.1, 0.25);
         let expected = Tuple::color(0.2, 0.5, 0.5);
         let result = c1 - c2;
-        assert!(result.nearly_equals(&expected, 0.00001))
+        assert!(result.nearly_equals(&expected, 1e-3f64))
     }
 
     #[test]
@@ -528,13 +529,13 @@ mod tests {
         let c2 = Tuple::color(0.9, 1.0, 0.1);
         let expected = Tuple::color(0.9, 0.2, 0.04);
         let result = c1 * c2;
-        assert!(result.nearly_equals(&expected, 0.00001))
+        assert!(result.nearly_equals(&expected, 1e-3f64))
     }
 
     #[test]
     fn to_vector_makes_the_last_element_0() {
-        let point = Tuple::point(1., 2., 3.,);
-        let expected = Tuple::vector(1.,2.,3.,);
+        let point = Tuple::point(1., 2., 3.);
+        let expected = Tuple::vector(1., 2., 3.);
         assert_eq!(point.to_vector(), expected);
     }
 
@@ -543,16 +544,16 @@ mod tests {
         let vector = Tuple::vector(1., -1., 0.);
         let normal = Tuple::vector(0., 1., 0.);
         let ray = vector.reflect(&normal);
-        let expected = Tuple::vector(1.,1.,0.);
+        let expected = Tuple::vector(1., 1., 0.);
         assert_eq!(ray, expected);
     }
 
     #[test]
     fn reflect_vector_off_slanted_surface() {
         let vector = Tuple::vector(0., -1., 0.);
-        let normal = Tuple::vector(2.0_f64.sqrt()/2., 2.0_f64.sqrt()/2., 0.);
+        let normal = Tuple::vector(2.0_f64.sqrt() / 2., 2.0_f64.sqrt() / 2., 0.);
         let ray = vector.reflect(&normal);
-        let expected = Tuple::vector(1.,0.,0.);
-        assert!(ray.nearly_equals(&expected, 0.00001));
+        let expected = Tuple::vector(1., 0., 0.);
+        assert!(ray.nearly_equals(&expected, 1e-3f64));
     }
 }

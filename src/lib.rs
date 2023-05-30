@@ -1,32 +1,34 @@
-mod tuple;
-pub use tuple::*;
-
-mod matrix;
-pub use matrix::*;
-
-mod canvas;
+pub use camera::*;
 pub use canvas::*;
-
-mod ray;
-pub use ray::*;
-
-mod sphere;
-pub use sphere::*;
-
-mod intersection;
 pub use intersection::*;
-
-mod light;
 pub use light::*;
-
-mod material;
 pub use material::*;
-
-mod world;
+pub use matrix::*;
+pub use ray::*;
+pub use sphere::*;
+pub use transformations::*;
+pub use tuple::*;
 pub use world::*;
 
+mod tuple;
+
+mod matrix;
+
+mod canvas;
+
+mod ray;
+
+mod sphere;
+
+mod intersection;
+
+mod light;
+
+mod material;
+
+mod world;
+
 mod transformations;
-pub use transformations::*;
 
 mod camera;
-pub use camera::*;
+

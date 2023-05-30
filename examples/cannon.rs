@@ -1,6 +1,4 @@
 use ray_tracer_challenge::{Canvas, Tuple};
-use std::fs::File;
-use std::io::Write;
 
 struct Projectile {
     position: Tuple,

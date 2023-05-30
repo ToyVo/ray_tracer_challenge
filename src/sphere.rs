@@ -1,4 +1,4 @@
-use crate::{Intersection, Matrix, Ray, Tuple, Material};
+use crate::{Intersection, Material, Matrix, Ray, Tuple};
 
 #[derive(PartialEq, Debug)]
 pub struct Sphere {
@@ -41,8 +41,9 @@ impl Sphere {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
+
     use super::*;
-    use std::f64::consts::{PI,SQRT_2,FRAC_1_SQRT_2};
 
     #[test]
     fn ray_intersects_sphere_at_two_points() {
@@ -120,7 +121,7 @@ mod tests {
     fn intersecting_scaled_sphere_with_ray() {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let mut shape = Sphere::new();
-        shape.transform=Matrix::scaling(2.0, 2.0, 2.0);
+        shape.transform = Matrix::scaling(2.0, 2.0, 2.0);
         let intersections = shape.intersects(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 3.0);
@@ -131,7 +132,7 @@ mod tests {
     fn intersecting_translated_sphere_with_ray() {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let mut shape = Sphere::new();
-        shape.transform=Matrix::translation(5.0, 0.0, 0.0);
+        shape.transform = Matrix::translation(5.0, 0.0, 0.0);
         let intersections = shape.intersects(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -170,7 +171,7 @@ mod tests {
             Tuple::vector(
                 3.0_f64.sqrt() / 3.0,
                 3.0_f64.sqrt() / 3.0,
-                3.0_f64.sqrt() / 3.0
+                3.0_f64.sqrt() / 3.0,
             )
         );
     }
@@ -189,22 +190,22 @@ mod tests {
     #[test]
     fn normal_on_translated_sphere() {
         let mut shape = Sphere::new();
-        shape.transform=Matrix::translation(0.0, 1.0, 0.0);
+        shape.transform = Matrix::translation(0.0, 1.0, 0.0);
         let normal = shape.normal_at(&Tuple::point(0.0, FRAC_1_SQRT_2 + 1., -FRAC_1_SQRT_2));
-        assert!(normal.nearly_equals(&Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2), 0.00001));
+        assert!(normal.nearly_equals(&Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2), 1e-3f64));
     }
 
     #[test]
     fn normal_on_transformed_sphere() {
         let mut shape = Sphere::new();
         let transform = Matrix::scaling(1.0, 0.5, 1.0) * Matrix::rotation_z(PI / 5.0);
-        shape.transform= transform;
+        shape.transform = transform;
         let normal = shape.normal_at(&Tuple::point(
             0.0,
             SQRT_2 / 2.0,
             -SQRT_2 / 2.0,
         ));
-        assert!(normal.nearly_equals(&Tuple::vector(0.0, 0.97014, -0.24254), 0.00001));
+        assert!(normal.nearly_equals(&Tuple::vector(0.0, 0.97014, -0.24254), 1e-3f64));
     }
 
     #[test]

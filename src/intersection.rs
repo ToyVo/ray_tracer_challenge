@@ -10,9 +10,10 @@ pub struct Computations<'a> {
     pub t: f64,
     pub object: &'a Sphere,
     pub point: Tuple,
-    pub eyev: Tuple,
-    pub normalv: Tuple,
+    pub eye_vector: Tuple,
+    pub normal_vector: Tuple,
     pub inside: bool,
+    pub over_point: Tuple,
 }
 
 impl<'a> Intersection<'a> {
@@ -21,7 +22,7 @@ impl<'a> Intersection<'a> {
     }
 
     pub fn hit(intersections: &'a Vec<Intersection>) -> Option<&'a Intersection<'a>> {
-        let mut min = std::f64::INFINITY;
+        let mut min = f64::INFINITY;
         let mut min_index = None;
         for (index, intersection) in intersections.iter().enumerate() {
             if intersection.t < min && intersection.t >= 0.0 {
@@ -37,26 +38,29 @@ impl<'a> Intersection<'a> {
 
     pub fn prepare_computations(&self, ray: &Ray) -> Computations<'a> {
         let point = ray.position(self.t);
-        let eyev = -ray.direction.clone();
-        let mut normalv = self.object.normal_at(&point);
-        let inside = normalv.dot(&eyev) < 0.0;
+        let eye_vector = -ray.direction.clone();
+        let mut normal_vector = self.object.normal_at(&point);
+        let inside = normal_vector.dot(&eye_vector) < 0.0;
         if inside {
-            normalv = -normalv;
+            normal_vector = -normal_vector;
         }
+        let over_point = &point + &normal_vector * 1e-11;
         Computations {
             t: self.t,
             object: self.object,
             point,
-            eyev,
-            normalv,
+            eye_vector,
+            normal_vector,
             inside,
+            over_point,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Ray, Tuple};
+    use crate::{Matrix, Ray, Tuple};
+
     use super::*;
 
     #[test]
@@ -129,8 +133,8 @@ mod tests {
         assert_eq!(comps.t, intersection.t);
         assert_eq!(comps.object, intersection.object);
         assert_eq!(comps.point, Tuple::point(0., 0., -1.));
-        assert_eq!(comps.eyev, Tuple::vector(0., 0., -1.));
-        assert_eq!(comps.normalv, Tuple::vector(0., 0., -1.));
+        assert_eq!(comps.eye_vector, Tuple::vector(0., 0., -1.));
+        assert_eq!(comps.normal_vector, Tuple::vector(0., 0., -1.));
         assert!(!comps.inside);
     }
 
@@ -141,8 +145,19 @@ mod tests {
         let intersection = Intersection::new(1., &shape);
         let comps = intersection.prepare_computations(&ray);
         assert_eq!(comps.point, Tuple::point(0., 0., 1.));
-        assert_eq!(comps.eyev, Tuple::vector(0., 0., -1.));
-        assert_eq!(comps.normalv, Tuple::vector(0., 0., -1.));
+        assert_eq!(comps.eye_vector, Tuple::vector(0., 0., -1.));
+        assert_eq!(comps.normal_vector, Tuple::vector(0., 0., -1.));
         assert!(comps.inside);
+    }
+
+    #[test]
+    fn hit_should_offset_point() {
+        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
+        let mut shape = Sphere::new();
+        shape.transform = Matrix::translation(0., 0., 1.);
+        let intersection = Intersection::new(5., &shape);
+        let comps = intersection.prepare_computations(&ray);
+        assert!(comps.over_point.z() < -f64::EPSILON / 2.);
+        assert!(comps.point.z() > comps.over_point.z());
     }
 }
