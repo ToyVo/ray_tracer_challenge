@@ -16,14 +16,14 @@ impl Canvas {
         Canvas { data, rows, cols }
     }
 
-    pub fn get(&self, row: usize, col: usize) -> &Tuple {
-        assert!(row < self.rows && col < self.cols);
-        &self.data[row * self.cols + col]
+    pub fn pixel_at(&self, x: usize, y: usize) -> &Tuple {
+        assert!(y < self.rows && x < self.cols);
+        &self.data[y * self.cols + x]
     }
 
-    pub fn set(&mut self, row: usize, col: usize, value: Tuple) {
-        assert!(row < self.rows && col < self.cols);
-        self.data[row * self.cols + col] = value;
+    pub fn write_pixel(&mut self, x: usize, y: usize, value: Tuple) {
+        assert!(y < self.rows && x < self.cols);
+        self.data[y * self.cols + x] = value;
     }
 
     pub fn rows(&self) -> usize {
@@ -41,6 +41,14 @@ impl Canvas {
     pub fn height(&self) -> usize {
         self.rows
     }
+
+    pub fn write_ppm(&self, filename: &str) -> std::io::Result<()> {
+        use std::fs::File;
+        use std::io::Write;
+        let mut file = File::create(filename)?;
+        file.write_all(self.to_string().as_bytes())?;
+        Ok(())
+    }
 }
 
 impl std::fmt::Display for Canvas {
@@ -53,7 +61,7 @@ impl std::fmt::Display for Canvas {
         for row in 0..self.rows() {
             let mut row_colors: Vec<u8> = Vec::with_capacity(self.cols() * 3);
             for col in 0..self.cols() {
-                let color = self.get(row, col);
+                let color = self.pixel_at(col, row);
                 row_colors.push((color.r() * 255.0).round() as u8);
                 row_colors.push((color.g() * 255.0).round() as u8);
                 row_colors.push((color.b() * 255.0).round() as u8);
@@ -84,23 +92,23 @@ mod testing {
 
     #[test]
     fn creating_canvas() {
-        let c = Canvas::new(20, 10, Tuple::color(0.0, 0.0, 0.0));
-        assert_eq!(c.width(), 10);
-        assert_eq!(c.height(), 20);
+        let canvas = Canvas::new(20, 10, Tuple::color(0.0, 0.0, 0.0));
+        assert_eq!(canvas.width(), 10);
+        assert_eq!(canvas.height(), 20);
     }
 
     #[test]
     fn writing_pixels_to_canvas() {
-        let mut c = Canvas::new(20, 10, Tuple::color(0.0, 0.0, 0.0));
+        let mut canvas = Canvas::new(20, 10, Tuple::color(0.0, 0.0, 0.0));
         let red = Tuple::color(1.0, 0.0, 0.0);
-        c.set(2, 3, red.clone());
-        assert_eq!(c.get(2, 3), &red);
+        canvas.write_pixel(3, 2, red.clone());
+        assert_eq!(canvas.pixel_at(3, 2), &red);
     }
 
     #[test]
     fn constructing_ppm_header() {
-        let c = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
-        let ppm = format!("{}", c);
+        let canvas = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
+        let ppm = format!("{}", canvas);
         let lines: Vec<&str> = ppm.split('\n').collect();
         assert_eq!(lines[0], "P3");
         assert_eq!(lines[1], "5 3");
@@ -109,14 +117,14 @@ mod testing {
 
     #[test]
     fn constructing_ppm_pixel_data() {
-        let mut c = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
+        let mut canvas = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
         let c1 = Tuple::color(1.5, 0.0, 0.0);
         let c2 = Tuple::color(0.0, 0.5, 0.0);
         let c3 = Tuple::color(-0.5, 0.0, 1.0);
-        c.set(0, 0, c1);
-        c.set(1, 2, c2);
-        c.set(2, 4, c3);
-        let ppm = format!("{}", c);
+        canvas.write_pixel(0, 0, c1);
+        canvas.write_pixel(2, 1, c2);
+        canvas.write_pixel(4, 2, c3);
+        let ppm = format!("{}", canvas);
         let lines: Vec<&str> = ppm.split('\n').collect();
         assert_eq!(lines[3], "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0");
         assert_eq!(lines[4], "0 0 0 0 0 0 0 128 0 0 0 0 0 0 0");
@@ -125,8 +133,8 @@ mod testing {
 
     #[test]
     fn splitting_long_lines_in_ppm_files() {
-        let c = Canvas::new(2, 10, Tuple::color(1.0, 0.8, 0.6));
-        let ppm = format!("{}", c);
+        let canvas = Canvas::new(2, 10, Tuple::color(1.0, 0.8, 0.6));
+        let ppm = format!("{}", canvas);
         let lines: Vec<&str> = ppm.split('\n').collect();
         assert_eq!(
             lines[3],
@@ -148,8 +156,8 @@ mod testing {
 
     #[test]
     fn ppm_files_are_terminated_by_a_newline_character() {
-        let c = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
-        let ppm = format!("{}", c);
+        let canvas = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
+        let ppm = format!("{}", canvas);
         let lines: Vec<&str> = ppm.split('\n').collect();
         assert_eq!(lines[lines.len() - 1], "");
     }

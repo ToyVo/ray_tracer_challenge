@@ -18,19 +18,17 @@ fn main() {
         for y in 0..size {
             let world_y = wall_size / 2. - pixel_size * y as f64;
             let target = Tuple::point(world_x, world_y, wall_z);
-            let r = Ray::new(ray_origin.clone(), (target - &ray_origin).normalize());
-            let xs = sphere.intersects(&r);
-            if let Some(hit) = Intersection::hit(&xs) {
-                let point = r.position(hit.t);
+            let ray = Ray::new(ray_origin.clone(), (target - &ray_origin).normalize());
+            let intersections = sphere.intersects(&ray);
+            if let Some(hit) = Intersection::hit(&intersections) {
+                let point = ray.position(hit.t);
                 let normal = hit.object.normal_at(&point);
-                let eye = -r.direction;
+                let eye = -ray.direction;
                 let color = hit.object.material.lighting(&light, &point, &eye, &normal);
-                canvas.set(x,y,color);
+                canvas.write_pixel(x, y, color);
             }
         }
     }
 
-    // write the canvas to a file
-    let mut file = File::create("silhouette.ppm").unwrap();
-    file.write_all(canvas.to_string().as_bytes()).unwrap();
+    canvas.write_ppm("silhouette.ppm").unwrap();
 }

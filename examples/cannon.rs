@@ -41,13 +41,10 @@ fn main() {
             break;
         }
         println!("x: {}, y: {}", x, y);
-        canvas.set(y, x, Tuple::color(1.0, 0.0, 0.0));
+        canvas.write_pixel(x, y, Tuple::color(1.0, 0.0, 0.0));
         ticks += 1;
     }
 
     println!("Took {} ticks", ticks);
-
-    // write the canvas to a file
-    let mut file = File::create("cannon.ppm").unwrap();
-    file.write_all(canvas.to_string().as_bytes()).unwrap();
+    canvas.write_ppm("cannon.ppm").unwrap();
 }

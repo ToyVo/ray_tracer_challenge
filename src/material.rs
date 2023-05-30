@@ -50,66 +50,66 @@ mod tests {
 
     #[test]
     fn material_has_default_values() {
-        let m = Material::new();
-        assert_eq!(m.color, Tuple::color(1.0, 1.0, 1.0));
-        assert_eq!(m.ambient, 0.1);
-        assert_eq!(m.diffuse, 0.9);
-        assert_eq!(m.specular, 0.9);
-        assert_eq!(m.shininess, 200.0);
+        let material = Material::new();
+        assert_eq!(material.color, Tuple::color(1.0, 1.0, 1.0));
+        assert_eq!(material.ambient, 0.1);
+        assert_eq!(material.diffuse, 0.9);
+        assert_eq!(material.specular, 0.9);
+        assert_eq!(material.shininess, 200.0);
     }
 
     #[test]
     fn lighting_eye_between_light_and_surface() {
-        let m = Material::new();
+        let material = Material::new();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eyev = Tuple::vector(0.0, 0.0, -1.0);
         let normalv = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = material.lighting(&light, &position, &eyev, &normalv);
         assert_eq!(result, Tuple::color(1.9, 1.9, 1.9));
     }
 
     #[test]
     fn lighting_eye_between_light_and_surface_eye_offset_45_degrees() {
-        let m = Material::new();
+        let material = Material::new();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eyev = Tuple::vector(0.0, SQRT_2/2.0, -SQRT_2/2.0);
         let normalv = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = material.lighting(&light, &position, &eyev, &normalv);
         assert_eq!(result, Tuple::color(1.0, 1.0, 1.0));
     }
 
     #[test]
     fn lighting_eye_opposite_surface_light_offset_45_degrees() {
-        let m = Material::new();
+        let material = Material::new();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eyev = Tuple::vector(0.0, 0.0, -1.0);
         let normalv = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = material.lighting(&light, &position, &eyev, &normalv);
         assert!(result.nearly_equals(&Tuple::color(0.9*SQRT_2/2.+0.1, 0.9*SQRT_2/2.+0.1, 0.9*SQRT_2/2.+0.1), 0.00001));
     }
 
     #[test]
     fn lighting_eye_in_path_of_reflection_vector() {
-        let m = Material::new();
+        let material = Material::new();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eyev = Tuple::vector(0.0, -SQRT_2/2.0, -SQRT_2/2.0);
         let normalv = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = material.lighting(&light, &position, &eyev, &normalv);
         assert_eq!(result, Tuple::color(0.9*SQRT_2/2.+1., 0.9*SQRT_2/2.+1., 0.9*SQRT_2/2.+1.));
     }
 
     #[test]
     fn lighting_light_behind_surface() {
-        let m = Material::new();
+        let material = Material::new();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eyev = Tuple::vector(0.0, 0.0, -1.0);
         let normalv = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, 10.0), Tuple::color(1.0, 1.0, 1.0));
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = material.lighting(&light, &position, &eyev, &normalv);
         assert_eq!(result, Tuple::color(0.1, 0.1, 0.1));
     }
 }

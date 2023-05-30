@@ -316,188 +316,188 @@ mod tests {
 
     #[test]
     fn tuple_with_w_1_is_point() {
-        let a = Tuple::from_vec(vec![4.3, -4.2, 3.1, 1.0]);
-        assert!(a.is_point());
+        let point = Tuple::from_vec(vec![4.3, -4.2, 3.1, 1.0]);
+        assert!(point.is_point());
     }
 
     #[test]
     fn tuple_with_w_0_is_vector() {
-        let a = Tuple::from_vec(vec![4.3, -4.2, 3.1, 0.0]);
-        assert!(a.is_vector());
+        let vector = Tuple::from_vec(vec![4.3, -4.2, 3.1, 0.0]);
+        assert!(vector.is_vector());
     }
 
     #[test]
     fn point_creates_tuples_with_w_1() {
-        let a = Tuple::point(4.0, -4.0, 3.0);
-        assert!(a.is_point());
+        let point = Tuple::point(4.0, -4.0, 3.0);
+        assert!(point.is_point());
     }
 
     #[test]
     fn vector_creates_tuples_with_w_0() {
-        let a = Tuple::vector(4.0, -4.0, 3.0);
-        assert!(a.is_vector());
+        let vector = Tuple::vector(4.0, -4.0, 3.0);
+        assert!(vector.is_vector());
     }
 
     #[test]
     fn equality_with_identical_tuples() {
-        let a = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let b = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        assert_eq!(a, b);
+        let tuple_a = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+        let tuple_b = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(tuple_a, tuple_b);
     }
 
     #[test]
     fn equality_with_different_tuples() {
-        let a = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let b = Tuple::from_vec(vec![2.0, 3.0, 4.0, 5.0]);
-        assert_ne!(a, b);
+        let tuple_a = Tuple::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+        let tuple_b = Tuple::from_vec(vec![2.0, 3.0, 4.0, 5.0]);
+        assert_ne!(tuple_a, tuple_b);
     }
 
     #[test]
     fn adding_two_tuples() {
-        let a1 = Tuple::from_vec(vec![3.0, -2.0, 5.0, 1.0]);
-        let a2 = Tuple::from_vec(vec![-2.0, 3.0, 1.0, 0.0]);
+        let tuple_a = Tuple::from_vec(vec![3.0, -2.0, 5.0, 1.0]);
+        let tuple_b = Tuple::from_vec(vec![-2.0, 3.0, 1.0, 0.0]);
         let expected = Tuple::from_vec(vec![1.0, 1.0, 6.0, 1.0]);
-        assert_eq!(a1 + a2, expected);
+        assert_eq!(tuple_a + tuple_b, expected);
     }
 
     #[test]
     fn subtracting_two_points() {
-        let p1 = Tuple::point(3.0, 2.0, 1.0);
-        let p2 = Tuple::point(5.0, 6.0, 7.0);
+        let point_a = Tuple::point(3.0, 2.0, 1.0);
+        let point_b = Tuple::point(5.0, 6.0, 7.0);
         let expected = Tuple::vector(-2.0, -4.0, -6.0);
-        assert_eq!(p1 - p2, expected);
+        assert_eq!(point_a - point_b, expected);
     }
 
     #[test]
     fn subtracting_vector_from_point() {
-        let p = Tuple::point(3.0, 2.0, 1.0);
-        let v = Tuple::vector(5.0, 6.0, 7.0);
+        let point = Tuple::point(3.0, 2.0, 1.0);
+        let vector = Tuple::vector(5.0, 6.0, 7.0);
         let expected = Tuple::point(-2.0, -4.0, -6.0);
-        assert_eq!(p - v, expected);
+        assert_eq!(point - vector, expected);
     }
 
     #[test]
     fn subtracting_two_vectors() {
-        let v1 = Tuple::vector(3.0, 2.0, 1.0);
-        let v2 = Tuple::vector(5.0, 6.0, 7.0);
+        let vector_a = Tuple::vector(3.0, 2.0, 1.0);
+        let vector_b = Tuple::vector(5.0, 6.0, 7.0);
         let expected = Tuple::vector(-2.0, -4.0, -6.0);
-        assert_eq!(v1 - v2, expected);
+        assert_eq!(vector_a - vector_b, expected);
     }
 
     #[test]
     fn subtracting_vector_from_zero_vector() {
         let zero = Tuple::vector(0.0, 0.0, 0.0);
-        let v = Tuple::vector(1.0, -2.0, 3.0);
+        let vector = Tuple::vector(1.0, -2.0, 3.0);
         let expected = Tuple::vector(-1.0, 2.0, -3.0);
-        assert_eq!(zero - v, expected);
+        assert_eq!(zero - vector, expected);
     }
 
     #[test]
     fn negating_a_tuple() {
-        let a = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
+        let vector = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
         let expected = Tuple::from_vec(vec![-1.0, 2.0, -3.0, 4.0]);
-        assert_eq!(-a, expected);
+        assert_eq!(-vector, expected);
     }
 
     #[test]
     fn multiplying_tuple_by_scalar() {
-        let a = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
+        let vector = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
         let expected = Tuple::from_vec(vec![3.5, -7.0, 10.5, -14.0]);
-        assert_eq!(a * 3.5, expected);
+        assert_eq!(vector * 3.5, expected);
     }
 
     #[test]
     fn multiplying_tuple_by_fraction() {
-        let a = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
+        let vector = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
         let expected = Tuple::from_vec(vec![0.5, -1.0, 1.5, -2.0]);
-        assert_eq!(a * 0.5, expected);
+        assert_eq!(vector * 0.5, expected);
     }
 
     #[test]
     fn dividing_tuple_by_scalar() {
-        let a = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
+        let vector = Tuple::from_vec(vec![1.0, -2.0, 3.0, -4.0]);
         let expected = Tuple::from_vec(vec![0.5, -1.0, 1.5, -2.0]);
-        assert_eq!(a / 2.0, expected);
+        assert_eq!(vector / 2.0, expected);
     }
 
     #[test]
     fn computing_magnitude_of_vector_1_0_0() {
-        let v = Tuple::vector(1.0, 0.0, 0.0);
-        assert_eq!(v.magnitude(), 1.0);
+        let vector = Tuple::vector(1.0, 0.0, 0.0);
+        assert_eq!(vector.magnitude(), 1.0);
     }
 
     #[test]
     fn computing_magnitude_of_vector_0_1_0() {
-        let v = Tuple::vector(0.0, 1.0, 0.0);
-        assert_eq!(v.magnitude(), 1.0);
+        let vector = Tuple::vector(0.0, 1.0, 0.0);
+        assert_eq!(vector.magnitude(), 1.0);
     }
 
     #[test]
     fn computing_magnitude_of_vector_0_0_1() {
-        let v = Tuple::vector(0.0, 0.0, 1.0);
-        assert_eq!(v.magnitude(), 1.0);
+        let vector = Tuple::vector(0.0, 0.0, 1.0);
+        assert_eq!(vector.magnitude(), 1.0);
     }
 
     #[test]
     fn computing_magnitude_of_vector_1_2_3() {
-        let v = Tuple::vector(1.0, 2.0, 3.0);
-        assert_eq!(v.magnitude(), 14.0_f64.sqrt());
+        let vector = Tuple::vector(1.0, 2.0, 3.0);
+        assert_eq!(vector.magnitude(), 14.0_f64.sqrt());
     }
 
     #[test]
     fn computing_magnitude_of_vector_neg1_neg2_neg3() {
-        let v = Tuple::vector(-1.0, -2.0, -3.0);
-        assert_eq!(v.magnitude(), 14.0_f64.sqrt());
+        let vector = Tuple::vector(-1.0, -2.0, -3.0);
+        assert_eq!(vector.magnitude(), 14.0_f64.sqrt());
     }
 
     #[test]
     fn normalizing_vector_4_0_0_gives_1_0_0() {
-        let v = Tuple::vector(4.0, 0.0, 0.0);
+        let vector = Tuple::vector(4.0, 0.0, 0.0);
         let expected = Tuple::vector(1.0, 0.0, 0.0);
-        assert_eq!(v.normalize(), expected);
+        assert_eq!(vector.normalize(), expected);
     }
 
     #[test]
     fn normalizing_vector_1_2_3() {
-        let v = Tuple::vector(1.0, 2.0, 3.0);
+        let vector = Tuple::vector(1.0, 2.0, 3.0);
         let expected = Tuple::vector(
             1.0 / 14.0_f64.sqrt(),
             2.0 / 14.0_f64.sqrt(),
             3.0 / 14.0_f64.sqrt(),
         );
-        assert_eq!(v.normalize(), expected);
+        assert_eq!(vector.normalize(), expected);
     }
 
     #[test]
     fn magnitude_of_normalized_vector() {
-        let v = Tuple::vector(1.0, 2.0, 3.0);
-        let normalized = v.normalize();
+        let vector = Tuple::vector(1.0, 2.0, 3.0);
+        let normalized = vector.normalize();
         assert_eq!(normalized.magnitude(), 1.0);
     }
 
     #[test]
     fn dot_product_of_two_tuples() {
-        let a = Tuple::vector(1.0, 2.0, 3.0);
-        let b = Tuple::vector(2.0, 3.0, 4.0);
-        assert_eq!(a.dot(&b), 20.0);
+        let vector_a = Tuple::vector(1.0, 2.0, 3.0);
+        let vector_b = Tuple::vector(2.0, 3.0, 4.0);
+        assert_eq!(vector_a.dot(&vector_b), 20.0);
     }
 
     #[test]
     fn cross_product_of_two_vectors() {
-        let a = Tuple::vector(1.0, 2.0, 3.0);
-        let b = Tuple::vector(2.0, 3.0, 4.0);
+        let vector_a = Tuple::vector(1.0, 2.0, 3.0);
+        let vector_b = Tuple::vector(2.0, 3.0, 4.0);
         let expected_a = Tuple::vector(-1.0, 2.0, -1.0);
         let expected_b = Tuple::vector(1.0, -2.0, 1.0);
-        assert_eq!(a.cross(&b), expected_a);
-        assert_eq!(b.cross(&a), expected_b);
+        assert_eq!(vector_a.cross(&vector_b), expected_a);
+        assert_eq!(vector_b.cross(&vector_a), expected_b);
     }
 
     #[test]
     fn creating_color() {
-        let c = Tuple::color(-0.5, 0.4, 1.7);
-        assert_eq!(c.r(), -0.5);
-        assert_eq!(c.g(), 0.4);
-        assert_eq!(c.b(), 1.7);
+        let color = Tuple::color(-0.5, 0.4, 1.7);
+        assert_eq!(color.r(), -0.5);
+        assert_eq!(color.g(), 0.4);
+        assert_eq!(color.b(), 1.7);
     }
 
     #[test]
@@ -518,8 +518,8 @@ mod tests {
 
     #[test]
     fn multiplying_color_by_scalar() {
-        let c = Tuple::color(0.2, 0.3, 0.4);
-        assert_eq!(c * 2.0, Tuple::color(0.4, 0.6, 0.8));
+        let color = Tuple::color(0.2, 0.3, 0.4);
+        assert_eq!(color * 2.0, Tuple::color(0.4, 0.6, 0.8));
     }
 
     #[test]
@@ -533,26 +533,26 @@ mod tests {
 
     #[test]
     fn to_vector_makes_the_last_element_0() {
-        let a = Tuple::point(1.,2.,3.,);
+        let point = Tuple::point(1., 2., 3.,);
         let expected = Tuple::vector(1.,2.,3.,);
-        assert_eq!(a.to_vector(), expected);
+        assert_eq!(point.to_vector(), expected);
     }
 
     #[test]
     fn reflect_vector_approaching_at_45_degrees() {
-        let v = Tuple::vector(1.,-1.,0.);
-        let n = Tuple::vector(0.,1.,0.);
-        let r = v.reflect(&n);
+        let vector = Tuple::vector(1., -1., 0.);
+        let normal = Tuple::vector(0., 1., 0.);
+        let ray = vector.reflect(&normal);
         let expected = Tuple::vector(1.,1.,0.);
-        assert_eq!(r, expected);
+        assert_eq!(ray, expected);
     }
 
     #[test]
     fn reflect_vector_off_slanted_surface() {
-        let v = Tuple::vector(0.,-1.,0.);
-        let n = Tuple::vector(2.0_f64.sqrt()/2.,2.0_f64.sqrt()/2.,0.);
-        let r = v.reflect(&n);
+        let vector = Tuple::vector(0., -1., 0.);
+        let normal = Tuple::vector(2.0_f64.sqrt()/2., 2.0_f64.sqrt()/2., 0.);
+        let ray = vector.reflect(&normal);
         let expected = Tuple::vector(1.,0.,0.);
-        assert!(r.nearly_equals(&expected, 0.00001));
+        assert!(ray.nearly_equals(&expected, 0.00001));
     }
 }
