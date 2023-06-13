@@ -1,5 +1,6 @@
 use crate::{Matrix, Tuple};
 
+#[derive(PartialEq, Debug, Clone)]
 pub struct Ray {
     pub origin: Tuple,
     pub direction: Tuple,

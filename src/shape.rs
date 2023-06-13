@@ -1,0 +1,119 @@
+use std::rc::Rc;
+use crate::{Matrix, Ray, Material, Intersection, Tuple};
+
+pub trait Shape: std::fmt::Debug {
+    fn transform(&self) -> &Matrix;
+    fn transform_mut(&mut self) -> &mut Matrix;
+    fn material(&self) -> &Material;
+    fn material_mut(&mut self) -> &mut Material;
+    fn local_intersect(&self, ray: &Ray) -> Vec<Intersection>;
+    fn local_normal_at(&self, point: &Tuple) -> Tuple;
+    fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
+        let ray = ray.transform(&self.transform().inverse());
+        self.local_intersect(&ray)
+    }
+    fn normal_at(&self, point: &Tuple) -> Tuple {
+        let local_point = &self.transform().inverse() * point;
+        let local_normal = self.local_normal_at(&local_point);
+        let world_normal = &self.transform().inverse().transpose() * &local_normal;
+        world_normal.to_vector().normalize()
+    }
+}
+
+impl PartialEq for dyn Shape {
+    fn eq(&self, other: &dyn Shape) -> bool {
+        self.transform() == other.transform() && self.material() == other.material()
+    }
+}
+
+impl PartialEq<Rc<dyn Shape>> for dyn Shape {
+    fn eq(&self, other: &Rc<dyn Shape>) -> bool {
+        self.transform() == other.transform() && self.material() == other.material()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::f64::consts::SQRT_2;
+
+    #[derive(Debug, PartialEq)]
+    struct TestShape {
+        transform: Matrix,
+        material: Material,
+    }
+
+    static mut RAY: Option<Ray> = None;
+
+    impl Shape for TestShape {
+        fn transform(&self) -> &Matrix {
+            &self.transform
+        }
+
+        fn transform_mut(&mut self) -> &mut Matrix {
+            &mut self.transform
+        }
+
+        fn material(&self) -> &Material {
+            &self.material
+        }
+
+        fn material_mut(&mut self) -> &mut Material {
+            &mut self.material
+        }
+
+        fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
+            unsafe { RAY = Some(ray.clone()) };
+            vec![]
+        }
+        fn local_normal_at(&self, point: &Tuple) -> Tuple {
+            point.clone()
+        }
+    }
+
+    #[test]
+    fn intersecting_scaled_shape_with_ray() {
+        let shape = TestShape {
+            transform: Matrix::scaling(2., 2., 2.),
+            material: Material::new(),
+        };
+        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
+        shape.intersect(&ray);
+        unsafe {
+            assert_eq!(RAY, Some(Ray::new(Tuple::point(0., 0., -2.5), Tuple::vector(0., 0., 0.5))));
+        }
+    }
+
+    #[test]
+    fn intersecting_translated_shape_with_ray() {
+        let shape = TestShape {
+            transform: Matrix::translation(5., 0., 0.),
+            material: Material::new(),
+        };
+        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
+        shape.intersect(&ray);
+        unsafe {
+            assert_eq!(RAY, Some(Ray::new(Tuple::point(-5., 0., -5.), Tuple::vector(0., 0., 1.))));
+        }
+    }
+
+    #[test]
+    fn computing_normal_on_translated_shape() {
+        let shape = TestShape {
+            transform: Matrix::translation(0., 1., 0.),
+            material: Material::new(),
+        };
+        let normal = shape.normal_at(&Tuple::point(0., 1.70711, -0.70711));
+        assert!(normal.nearly_equals(&Tuple::vector(0., 0.70711, -0.70711), 1e-3f64));
+    }
+
+    #[test]
+    fn computing_normal_on_transformed_shape() {
+        let shape = TestShape {
+            transform: Matrix::scaling(1., 0.5, 1.) * Matrix::rotation_z(std::f64::consts::PI / 5.),
+            material: Material::new(),
+        };
+        let normal = shape.normal_at(&Tuple::point(0., SQRT_2 / 2., -SQRT_2 / 2.));
+        assert!(normal.nearly_equals(&Tuple::vector(0., 0.97014, -0.24254), 1e-3f64));
+    }
+}

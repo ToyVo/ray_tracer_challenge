@@ -1,9 +1,10 @@
-use crate::{Intersection, Material, Matrix, Ray, Tuple};
+use crate::{Intersection, Material, Matrix, Ray, Tuple, Shape};
+use std::rc::Rc;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Sphere {
-    pub transform: Matrix,
-    pub material: Material,
+    transform: Matrix,
+    material: Material,
 }
 
 impl Sphere {
@@ -13,29 +14,39 @@ impl Sphere {
             material: Material::new(),
         }
     }
+}
 
-    pub fn intersects(&self, ray: &Ray) -> Vec<Intersection> {
-        let ray = ray.transform(&self.transform.inverse());
+impl Shape for Sphere {
+    fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let radius = 1.0;
         let sphere_to_ray = &ray.origin - Tuple::point(0.0, 0.0, 0.0);
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * ray.direction.dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - radius;
         let discriminant = b.powi(2) - 4.0 * a * c;
+        let shape = Rc::new(self.clone());
         if discriminant < 0.0 {
             vec![]
         } else {
             let t1 = (-b - discriminant.sqrt()) / (2.0 * a);
             let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
-            vec![Intersection::new(t1, self), Intersection::new(t2, self)]
+            vec![Intersection::new(t1, shape.clone()), Intersection::new(t2, shape)]
         }
     }
-
-    pub fn normal_at(&self, point: &Tuple) -> Tuple {
-        let object_point = &self.transform.inverse() * point;
-        let object_normal = object_point - Tuple::point(0.0, 0.0, 0.0);
-        let world_normal = &self.transform.inverse().transpose() * &object_normal;
-        world_normal.to_vector().normalize()
+    fn local_normal_at(&self, point: &Tuple) -> Tuple {
+        point - Tuple::point(0.0, 0.0, 0.0)
+    }
+    fn transform(&self) -> &Matrix {
+        &self.transform
+    }
+    fn transform_mut(&mut self) -> &mut Matrix {
+        &mut self.transform
+    }
+    fn material(&self) -> &Material {
+        &self.material
+    }
+    fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
     }
 }
 
@@ -49,7 +60,7 @@ mod tests {
     fn ray_intersects_sphere_at_two_points() {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let shape = Sphere::new();
-        let intersections = shape.intersects(&ray);
+        let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 4.0);
         assert_eq!(intersections[1].t, 6.0);
@@ -59,7 +70,7 @@ mod tests {
     fn ray_intersects_sphere_at_tangent() {
         let ray = Ray::new(Tuple::point(0.0, 1.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let shape = Sphere::new();
-        let intersections = shape.intersects(&ray);
+        let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 5.0);
         assert_eq!(intersections[1].t, 5.0);
@@ -69,7 +80,7 @@ mod tests {
     fn ray_misses_sphere() {
         let ray = Ray::new(Tuple::point(0.0, 2.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let shape = Sphere::new();
-        let intersections = shape.intersects(&ray);
+        let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
 
@@ -77,7 +88,7 @@ mod tests {
     fn ray_originates_inside_sphere() {
         let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
         let shape = Sphere::new();
-        let intersections = shape.intersects(&ray);
+        let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, -1.0);
         assert_eq!(intersections[1].t, 1.0);
@@ -87,7 +98,7 @@ mod tests {
     fn sphere_behind_ray() {
         let ray = Ray::new(Tuple::point(0.0, 0.0, 5.0), Tuple::vector(0.0, 0.0, 1.0));
         let shape = Sphere::new();
-        let intersections = shape.intersects(&ray);
+        let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, -6.0);
         assert_eq!(intersections[1].t, -4.0);
@@ -97,32 +108,31 @@ mod tests {
     fn intersect_sets_object_on_intersection() {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let shape = Sphere::new();
-        let intersections = shape.intersects(&ray);
+        let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
-        assert_eq!(intersections[0].object, &shape);
-        assert_eq!(intersections[1].object, &shape);
+        assert!(<dyn Shape>::eq(&shape, &intersections[0].object));
+        assert!(<dyn Shape>::eq(&shape, &intersections[1].object));
     }
 
     #[test]
     fn sphere_default_transformation() {
         let shape = Sphere::new();
-        assert_eq!(shape.transform, Matrix::identity(4));
+        assert_eq!(shape.transform(), &Matrix::identity(4));
     }
 
     #[test]
     fn changing_sphere_transformation() {
         let mut shape = Sphere::new();
-        let translation = Matrix::translation(2.0, 3.0, 4.0);
-        shape.transform = translation.clone();
-        assert_eq!(shape.transform, translation);
+        *shape.transform_mut() = Matrix::translation(2.0, 3.0, 4.0);
+        assert_eq!(shape.transform(), &Matrix::translation(2.0, 3.0, 4.0));
     }
 
     #[test]
     fn intersecting_scaled_sphere_with_ray() {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let mut shape = Sphere::new();
-        shape.transform = Matrix::scaling(2.0, 2.0, 2.0);
-        let intersections = shape.intersects(&ray);
+        *shape.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
+        let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 3.0);
         assert_eq!(intersections[1].t, 7.0);
@@ -132,8 +142,8 @@ mod tests {
     fn intersecting_translated_sphere_with_ray() {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let mut shape = Sphere::new();
-        shape.transform = Matrix::translation(5.0, 0.0, 0.0);
-        let intersections = shape.intersects(&ray);
+        *shape.transform_mut() = Matrix::translation(5.0, 0.0, 0.0);
+        let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
 
@@ -190,7 +200,7 @@ mod tests {
     #[test]
     fn normal_on_translated_sphere() {
         let mut shape = Sphere::new();
-        shape.transform = Matrix::translation(0.0, 1.0, 0.0);
+        *shape.transform_mut() = Matrix::translation(0.0, 1.0, 0.0);
         let normal = shape.normal_at(&Tuple::point(0.0, FRAC_1_SQRT_2 + 1., -FRAC_1_SQRT_2));
         assert!(normal.nearly_equals(&Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2), 1e-3f64));
     }
@@ -198,8 +208,7 @@ mod tests {
     #[test]
     fn normal_on_transformed_sphere() {
         let mut shape = Sphere::new();
-        let transform = Matrix::scaling(1.0, 0.5, 1.0) * Matrix::rotation_z(PI / 5.0);
-        shape.transform = transform;
+        *shape.transform_mut() = Matrix::scaling(1.0, 0.5, 1.0) * Matrix::rotation_z(PI / 5.0);
         let normal = shape.normal_at(&Tuple::point(
             0.0,
             SQRT_2 / 2.0,
@@ -211,8 +220,7 @@ mod tests {
     #[test]
     fn sphere_has_default_material() {
         let shape = Sphere::new();
-        let material = shape.material;
-        assert_eq!(material, Material::new());
+        assert_eq!(shape.material(), &Material::new());
     }
 
     #[test]
@@ -220,7 +228,7 @@ mod tests {
         let mut shape = Sphere::new();
         let mut material = Material::new();
         material.ambient = 1.0;
-        shape.material = material.clone();
-        assert_eq!(shape.material, material);
+        shape.material_mut().ambient = 1.0;
+        assert_eq!(shape.material(), &material);
     }
 }
