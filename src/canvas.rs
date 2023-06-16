@@ -118,12 +118,12 @@ mod testing {
     #[test]
     fn constructing_ppm_pixel_data() {
         let mut canvas = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
-        let c1 = Tuple::color(1.5, 0.0, 0.0);
-        let c2 = Tuple::color(0.0, 0.5, 0.0);
-        let c3 = Tuple::color(-0.5, 0.0, 1.0);
-        canvas.write_pixel(0, 0, c1);
-        canvas.write_pixel(2, 1, c2);
-        canvas.write_pixel(4, 2, c3);
+        let color_a = Tuple::color(1.5, 0.0, 0.0);
+        let color_b = Tuple::color(0.0, 0.5, 0.0);
+        let color_c = Tuple::color(-0.5, 0.0, 1.0);
+        canvas.write_pixel(0, 0, color_a);
+        canvas.write_pixel(2, 1, color_b);
+        canvas.write_pixel(4, 2, color_c);
         let ppm = format!("{}", canvas);
         let lines: Vec<&str> = ppm.split('\n').collect();
         assert_eq!(lines[3], "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0");

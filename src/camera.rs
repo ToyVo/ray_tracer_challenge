@@ -3,7 +3,6 @@ use crate::{Canvas, Matrix, Ray, Tuple, World};
 pub struct Camera {
     h_size: usize,
     v_size: usize,
-    field_of_view: f64,
     pub transform: Matrix,
     pixel_size: f64,
     half_width: f64,
@@ -23,7 +22,6 @@ impl Camera {
         Camera {
             h_size,
             v_size,
-            field_of_view,
             transform: Matrix::identity(4),
             pixel_size,
             half_width,
@@ -71,7 +69,6 @@ mod tests {
         let camera = Camera::new(h_size, v_size, field_of_view);
         assert_eq!(camera.h_size, 160);
         assert_eq!(camera.v_size, 120);
-        assert_eq!(camera.field_of_view, PI / 2.);
         assert_eq!(camera.transform, Matrix::identity(4));
     }
 
@@ -92,7 +89,9 @@ mod tests {
         let camera = Camera::new(201, 101, PI / 2.);
         let ray = camera.ray_for_pixel(100, 50);
         assert_eq!(ray.origin, Tuple::point(0., 0., 0.));
-        assert!(ray.direction.nearly_equals(&Tuple::vector(0., 0., -1.), 1e-3f64));
+        assert!(ray
+            .direction
+            .nearly_equals(&Tuple::vector(0., 0., -1.), 1e-3f64));
     }
 
     #[test]
@@ -100,7 +99,9 @@ mod tests {
         let camera = Camera::new(201, 101, PI / 2.);
         let ray = camera.ray_for_pixel(0, 0);
         assert_eq!(ray.origin, Tuple::point(0., 0., 0.));
-        assert!(ray.direction.nearly_equals(&Tuple::vector(0.66519, 0.33259, -0.66851), 1e-3f64));
+        assert!(ray
+            .direction
+            .nearly_equals(&Tuple::vector(0.66519, 0.33259, -0.66851), 1e-3f64));
     }
 
     #[test]
@@ -109,7 +110,9 @@ mod tests {
         camera.transform = Matrix::rotation_y(PI / 4.) * Matrix::translation(0., -2., 5.);
         let ray = camera.ray_for_pixel(100, 50);
         assert_eq!(ray.origin, Tuple::point(0., 2., -5.));
-        assert!(ray.direction.nearly_equals(&Tuple::vector(SQRT_2 / 2., 0., -SQRT_2 / 2.), 1e-3f64));
+        assert!(ray
+            .direction
+            .nearly_equals(&Tuple::vector(SQRT_2 / 2., 0., -SQRT_2 / 2.), 1e-3f64));
     }
 
     #[test]
@@ -121,6 +124,8 @@ mod tests {
         let up = Tuple::vector(0., 1., 0.);
         camera.transform = view_transform(from, to, up);
         let image = camera.render(&world);
-        assert!(image.pixel_at(5, 5).nearly_equals(&Tuple::color(0.38066, 0.47583, 0.2855), 1e-3f64));
+        assert!(image
+            .pixel_at(5, 5)
+            .nearly_equals(&Tuple::color(0.38066, 0.47583, 0.2855), 1e-3f64));
     }
 }

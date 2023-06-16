@@ -1,4 +1,4 @@
-use ray_tracer_challenge::{Canvas, Intersection, Light, Ray, Sphere, Tuple, Shape};
+use ray_tracer_challenge::{Canvas, Intersection, Light, Ray, Sphere, Tuple, Shape, SolidPattern};
 
 fn main() {
     let size = 256;
@@ -7,7 +7,7 @@ fn main() {
     let wall_size = 7.;
     let pixel_size = wall_size / size as f64;
     let mut sphere = Sphere::new();
-    sphere.material_mut().color = Tuple::color(1., 0.2, 1.);
+    sphere.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(1., 0.2, 1.)));
     let mut canvas = Canvas::new(size, size, Tuple::color(0.0, 0.0, 0.0));
     let light = Light::new(Tuple::point(-10., 10., -10.), Tuple::color(1., 1., 1.));
 
@@ -22,7 +22,7 @@ fn main() {
                 let point = ray.position(hit.t);
                 let normal = hit.object.normal_at(&point);
                 let eye = -ray.direction;
-                let color = hit.object.material().lighting(&light, &point, &eye, &normal, false);
+                let color = hit.object.material().lighting(hit.object.as_ref(), &light, &point, &eye, &normal, false);
                 canvas.write_pixel(x, y, color);
             }
         }

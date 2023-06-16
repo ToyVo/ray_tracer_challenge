@@ -1,10 +1,9 @@
 use crate::{Ray, Shape, Tuple};
-use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct Intersection {
     pub t: f64,
-    pub object: Rc<dyn Shape>,
+    pub object: Box<dyn Shape>,
 }
 
 impl PartialEq for Intersection {
@@ -16,7 +15,7 @@ impl PartialEq for Intersection {
 #[derive(Debug)]
 pub struct Computations {
     pub t: f64,
-    pub object: Rc<dyn Shape>,
+    pub object: Box<dyn Shape>,
     pub point: Tuple,
     pub eye_vector: Tuple,
     pub normal_vector: Tuple,
@@ -25,7 +24,7 @@ pub struct Computations {
 }
 
 impl Intersection {
-    pub fn new(t: f64, object: Rc<dyn Shape>) -> Intersection {
+    pub fn new(t: f64, object: Box<dyn Shape>) -> Intersection {
         Intersection { t, object }
     }
 
@@ -68,21 +67,21 @@ impl Intersection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Matrix, Ray, Tuple, Sphere};
+    use crate::{Matrix, Ray, Tuple, Sphere, Transform};
 
     use super::*;
 
     #[test]
     fn intersection_encapsulates_t_and_object() {
         let shape = Sphere::new();
-        let intersection = Intersection::new(3.5, Rc::new(shape.clone()));
+        let intersection = Intersection::new(3.5, Box::new(shape.clone()));
         assert_eq!(intersection.t, 3.5);
         assert!(<dyn Shape>::eq(&shape, &intersection.object));
     }
 
     #[test]
     fn aggregating_intersections() {
-        let shape = Rc::new(Sphere::new());
+        let shape = Box::new(Sphere::new());
         let i1 = Intersection::new(1.0, shape.clone());
         let i2 = Intersection::new(2.0, shape);
         let intersections = vec![i1, i2];
@@ -93,7 +92,7 @@ mod tests {
 
     #[test]
     fn when_all_intersections_have_positive_t() {
-        let shape = Rc::new(Sphere::new());
+        let shape = Box::new(Sphere::new());
         let i1 = Intersection::new(1.0, shape.clone());
         let i2 = Intersection::new(2.0, shape);
         let intersections = vec![i1.clone(), i2];
@@ -103,7 +102,7 @@ mod tests {
 
     #[test]
     fn when_some_intersections_have_negative_t() {
-        let shape = Rc::new(Sphere::new());
+        let shape = Box::new(Sphere::new());
         let i1 = Intersection::new(-1.0, shape.clone());
         let i2 = Intersection::new(1.0, shape);
         let intersections = vec![i1, i2.clone()];
@@ -113,7 +112,7 @@ mod tests {
 
     #[test]
     fn when_all_intersections_have_negative_t() {
-        let shape = Rc::new(Sphere::new());
+        let shape = Box::new(Sphere::new());
         let i1 = Intersection::new(-2.0, shape.clone());
         let i2 = Intersection::new(-1.0, shape);
         let intersections = vec![i1, i2];
@@ -123,7 +122,7 @@ mod tests {
 
     #[test]
     fn hit_always_lowest_nonnegative_intersection() {
-        let shape = Rc::new(Sphere::new());
+        let shape = Box::new(Sphere::new());
         let i1 = Intersection::new(5.0, shape.clone());
         let i2 = Intersection::new(7.0, shape.clone());
         let i3 = Intersection::new(-3.0, shape.clone());
@@ -137,7 +136,7 @@ mod tests {
     fn precomputing_state_of_intersection() {
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
         let shape = Sphere::new();
-        let intersection = Intersection::new(4., Rc::new(shape.clone()));
+        let intersection = Intersection::new(4., Box::new(shape.clone()));
         let comps = intersection.prepare_computations(&ray);
         assert_eq!(comps.t, intersection.t);
         assert!(<dyn Shape>::eq(&shape, &intersection.object));
@@ -151,7 +150,7 @@ mod tests {
     #[test]
     fn hit_when_intersection_inside() {
         let ray = Ray::new(Tuple::point(0., 0., 0.), Tuple::vector(0., 0., 1.));
-        let shape = Rc::new(Sphere::new());
+        let shape = Box::new(Sphere::new());
         let intersection = Intersection::new(1., shape);
         let comps = intersection.prepare_computations(&ray);
         assert_eq!(comps.point, Tuple::point(0., 0., 1.));
@@ -165,7 +164,7 @@ mod tests {
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
         let mut shape = Sphere::new();
         *shape.transform_mut() = Matrix::translation(0., 0., 1.);
-        let intersection = Intersection::new(5., Rc::new(shape));
+        let intersection = Intersection::new(5., Box::new(shape));
         let comps = intersection.prepare_computations(&ray);
         assert!(comps.over_point.z() < -f64::EPSILON / 2.);
         assert!(comps.point.z() > comps.over_point.z());

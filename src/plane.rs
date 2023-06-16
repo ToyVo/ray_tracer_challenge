@@ -1,5 +1,4 @@
-use crate::{Shape, Material, Matrix, Tuple, Ray, Intersection};
-use std::rc::Rc;
+use crate::{Shape, Material, Matrix, Tuple, Ray, Intersection, Transform};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plane {
@@ -16,13 +15,15 @@ impl Plane {
     }
 }
 
-impl Shape for Plane {
+impl Transform for Plane {
     fn transform(&self) -> &Matrix {
         &self.transform
     }
     fn transform_mut(&mut self) -> &mut Matrix {
         &mut self.transform
     }
+}
+impl Shape for Plane {
     fn material(&self) -> &Material {
         &self.material
     }
@@ -34,7 +35,7 @@ impl Shape for Plane {
             vec![]
         } else {
             let t = -ray.origin.y() / ray.direction.y();
-            let shape = Rc::new(self.clone());
+            let shape = Box::new(self.clone());
             vec![Intersection::new(t, shape)]
         }
     }

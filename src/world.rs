@@ -1,7 +1,7 @@
-use crate::{Computations, Intersection, Light, Matrix, Ray, Sphere, Tuple, Shape};
-use std::rc::Rc;
+use crate::{Computations, Intersection, Light, Matrix, Ray, Sphere, Tuple, Shape, SolidPattern, Transform};
+
 pub struct World {
-    pub objects: Vec<Rc<dyn Shape>>,
+    pub objects: Vec<Box<dyn Shape>>,
     pub lights: Vec<Light>,
 }
 
@@ -15,14 +15,14 @@ impl World {
 
     pub fn default() -> World {
         let mut s1 = Sphere::new();
-        s1.material_mut().color = Tuple::color(0.8, 1.0, 0.6);
+        s1.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(0.8, 1.0, 0.6)));
         s1.material_mut().diffuse = 0.7;
         s1.material_mut().specular = 0.2;
         let mut s2 = Sphere::new();
         *s2.transform_mut() = Matrix::scaling(0.5, 0.5, 0.5);
         let light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         World {
-            objects: vec![Rc::new(s1), Rc::new(s2)],
+            objects: vec![Box::new(s1), Box::new(s2)],
             lights: vec![light],
         }
     }
@@ -40,7 +40,7 @@ impl World {
     pub fn shade_hit(&self, comps: &Computations) -> Tuple {
         self.lights.iter().fold(Tuple::color(0.0, 0.0, 0.0), |sum, light| {
             let shadowed = self.is_shadowed(light, &comps.over_point);
-            sum + comps.object.material().lighting(light, &comps.over_point, &comps.eye_vector, &comps.normal_vector, shadowed)
+            sum + comps.object.material().lighting(comps.object.as_ref(), light, &comps.over_point, &comps.eye_vector, &comps.normal_vector, shadowed)
         })
     }
 
@@ -85,7 +85,7 @@ mod tests {
     fn default_world() {
         let light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let mut material = Material::new();
-        material.color = Tuple::color(0.8, 1.0, 0.6);
+        material.pattern = Box::new(SolidPattern::new(Tuple::color(0.8, 1.0, 0.6)));
         material.diffuse = 0.7;
         material.specular = 0.2;
         let transform= Matrix::scaling(0.5, 0.5, 0.5);
@@ -151,11 +151,11 @@ mod tests {
     #[test]
     fn color_intersection_behind_ray() {
         let mut world = World::default();
-        Rc::get_mut(&mut world.objects[0]).unwrap().material_mut().ambient = 1.;
-        Rc::get_mut(&mut world.objects[1]).unwrap().material_mut().ambient = 1.;
+        Box::get_mut(&mut world.objects[0]).unwrap().material_mut().ambient = 1.;
+        Box::get_mut(&mut world.objects[1]).unwrap().material_mut().ambient = 1.;
         let ray = Ray::new(Tuple::point(0., 0., 0.75), Tuple::vector(0., 0., -1.));
         let color = world.color_at(&ray);
-        assert_eq!(color, world.objects[1].material().color)
+        assert_eq!(&color, world.objects[1].material().pattern.colors()[0])
     }
 
     #[test]
@@ -193,7 +193,7 @@ mod tests {
         let shape_a = Sphere::new();
         let mut shape_b = Sphere::new();
         shape_b.transform_mut().translate(0., 0., 10.);
-        world.objects = vec![Rc::new(shape_a), Rc::new(shape_b)];
+        world.objects = vec![Box::new(shape_a), Box::new(shape_b)];
         let ray = Ray::new(Tuple::point(0., 0., 5.), Tuple::vector(0., 0., 1.));
         let intersection = Intersection::new(4., world.objects[1].clone());
         let comps = intersection.prepare_computations(&ray);

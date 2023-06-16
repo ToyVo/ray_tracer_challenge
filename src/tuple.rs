@@ -503,17 +503,17 @@ mod tests {
 
     #[test]
     fn adding_colors() {
-        let c1 = Tuple::color(0.9, 0.6, 0.75);
-        let c2 = Tuple::color(0.7, 0.1, 0.25);
-        assert_eq!(c1 + c2, Tuple::color(1.6, 0.7, 1.0));
+        let color_a = Tuple::color(0.9, 0.6, 0.75);
+        let color_b = Tuple::color(0.7, 0.1, 0.25);
+        assert_eq!(color_a + color_b, Tuple::color(1.6, 0.7, 1.0));
     }
 
     #[test]
     fn subtracting_colors() {
-        let c1 = Tuple::color(0.9, 0.6, 0.75);
-        let c2 = Tuple::color(0.7, 0.1, 0.25);
+        let color_a = Tuple::color(0.9, 0.6, 0.75);
+        let color_b = Tuple::color(0.7, 0.1, 0.25);
         let expected = Tuple::color(0.2, 0.5, 0.5);
-        let result = c1 - c2;
+        let result = color_a - color_b;
         assert!(result.nearly_equals(&expected, 1e-3f64))
     }
 
@@ -525,10 +525,10 @@ mod tests {
 
     #[test]
     fn multiplying_colors() {
-        let c1 = Tuple::color(1.0, 0.2, 0.4);
-        let c2 = Tuple::color(0.9, 1.0, 0.1);
+        let color_a = Tuple::color(1.0, 0.2, 0.4);
+        let color_b = Tuple::color(0.9, 1.0, 0.1);
         let expected = Tuple::color(0.9, 0.2, 0.04);
-        let result = c1 * c2;
+        let result = color_a * color_b;
         assert!(result.nearly_equals(&expected, 1e-3f64))
     }
 

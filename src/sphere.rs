@@ -1,5 +1,4 @@
-use crate::{Intersection, Material, Matrix, Ray, Tuple, Shape};
-use std::rc::Rc;
+use crate::{Intersection, Material, Matrix, Ray, Tuple, Shape, Transform};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Sphere {
@@ -24,7 +23,7 @@ impl Shape for Sphere {
         let b = 2.0 * ray.direction.dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - radius;
         let discriminant = b.powi(2) - 4.0 * a * c;
-        let shape = Rc::new(self.clone());
+        let shape = Box::new(self.clone());
         if discriminant < 0.0 {
             vec![]
         } else {
@@ -36,17 +35,20 @@ impl Shape for Sphere {
     fn local_normal_at(&self, point: &Tuple) -> Tuple {
         point - Tuple::point(0.0, 0.0, 0.0)
     }
-    fn transform(&self) -> &Matrix {
-        &self.transform
-    }
-    fn transform_mut(&mut self) -> &mut Matrix {
-        &mut self.transform
-    }
     fn material(&self) -> &Material {
         &self.material
     }
     fn material_mut(&mut self) -> &mut Material {
         &mut self.material
+    }
+}
+
+impl Transform for Sphere {
+    fn transform(&self) -> &Matrix {
+        &self.transform
+    }
+    fn transform_mut(&mut self) -> &mut Matrix {
+        &mut self.transform
     }
 }
 

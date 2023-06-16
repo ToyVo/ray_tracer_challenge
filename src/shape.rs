@@ -1,9 +1,7 @@
-use std::rc::Rc;
-use crate::{Matrix, Ray, Material, Intersection, Tuple};
+use crate::{Ray, Material, Intersection, Tuple, Transform};
+use dyn_clone::DynClone;
 
-pub trait Shape: std::fmt::Debug {
-    fn transform(&self) -> &Matrix;
-    fn transform_mut(&mut self) -> &mut Matrix;
+pub trait Shape: std::fmt::Debug + DynClone + Transform {
     fn material(&self) -> &Material;
     fn material_mut(&mut self) -> &mut Material;
     fn local_intersect(&self, ray: &Ray) -> Vec<Intersection>;
@@ -20,14 +18,16 @@ pub trait Shape: std::fmt::Debug {
     }
 }
 
+dyn_clone::clone_trait_object!(Shape);
+
 impl PartialEq for dyn Shape {
     fn eq(&self, other: &dyn Shape) -> bool {
         self.transform() == other.transform() && self.material() == other.material()
     }
 }
 
-impl PartialEq<Rc<dyn Shape>> for dyn Shape {
-    fn eq(&self, other: &Rc<dyn Shape>) -> bool {
+impl PartialEq<Box<dyn Shape>> for dyn Shape {
+    fn eq(&self, other: &Box<dyn Shape>) -> bool {
         self.transform() == other.transform() && self.material() == other.material()
     }
 }
@@ -36,8 +36,9 @@ impl PartialEq<Rc<dyn Shape>> for dyn Shape {
 mod tests {
     use super::*;
     use std::f64::consts::SQRT_2;
+    use crate::Matrix;
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     struct TestShape {
         transform: Matrix,
         material: Material,
@@ -45,7 +46,7 @@ mod tests {
 
     static mut RAY: Option<Ray> = None;
 
-    impl Shape for TestShape {
+    impl Transform for TestShape {
         fn transform(&self) -> &Matrix {
             &self.transform
         }
@@ -53,7 +54,9 @@ mod tests {
         fn transform_mut(&mut self) -> &mut Matrix {
             &mut self.transform
         }
+    }
 
+    impl Shape for TestShape {
         fn material(&self) -> &Material {
             &self.material
         }
