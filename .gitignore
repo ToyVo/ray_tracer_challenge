@@ -1,5 +1,2 @@
-/target
-/Cargo.lock
-/*.ppm
-/.idea
-/.direnv
+.direnv
+target

@@ -16,6 +16,7 @@ fn main() {
         Box::new(SolidPattern::new(Tuple::color(0.25, 0.25, 0.25))),
     );
     *s2.transform_mut() = Matrix::scaling(0.1, 0.1, 0.1) * Matrix::rotation_y(PI / 2.);
+    let pattern = PerturbedPattern::new(Box::new(BlendedPattern::new(Box::new(s1), Box::new(s2))));
 
     let mut floor = Plane::new();
     *floor.transform_mut() = Matrix::scaling(10., 0.01, 10.);
