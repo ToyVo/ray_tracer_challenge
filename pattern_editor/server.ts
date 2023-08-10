@@ -1,7 +1,31 @@
-import express from 'express';
+import esbuild from "esbuild";
+import { wasmLoader } from "esbuild-plugin-wasm";
+import wasmpack from "esbuild-plugin-wasm-pack";
 
-const app = express();
+(async () => {
+    const ctx = await esbuild.context({
+        entryPoints: ["browser/index.ts"],
+        bundle: true,
+        minify: true,
+        sourcemap: true,
+        format: "esm",
+        outdir: "./public/dist",
+        plugins: [
+            wasmLoader(),
+            wasmpack({
+                path: ".",
+            }),
+        ],
+        define: {
+            DEBUG: "true",
+        },
+    });
 
-app.use(express.static('public'));
+    await ctx.watch();
 
-app.listen(3000, () => console.log('Server is running on http://localhost:3000'));
+    const { host, port } = await ctx.serve({
+        servedir: "./public",
+    });
+
+    console.log(`Server listening on http://${host}:${port}`);
+})();
