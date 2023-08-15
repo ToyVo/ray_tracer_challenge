@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use ray_tracer_challenge::{
+use ray_tracer::{
     view_transform, BlendedPattern, Camera, CheckeredPattern, Light, Matrix, Plane, Shape,
     SolidPattern, Sphere, StripePattern, Tuple, World, Transform, PerturbedPattern
 };

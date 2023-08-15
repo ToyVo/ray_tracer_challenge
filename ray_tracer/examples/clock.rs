@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use ray_tracer_challenge::{Canvas, Matrix, Tuple};
+use ray_tracer::{Canvas, Matrix, Tuple};
 
 fn main() {
     let size = 512;

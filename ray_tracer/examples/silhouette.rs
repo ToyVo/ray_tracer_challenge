@@ -1,4 +1,4 @@
-use ray_tracer_challenge::{Canvas, Intersection, Light, Ray, Sphere, Tuple, Shape, SolidPattern};
+use ray_tracer::{Canvas, Intersection, Light, Ray, Sphere, Tuple, Shape, SolidPattern};
 
 fn main() {
     let size = 256;

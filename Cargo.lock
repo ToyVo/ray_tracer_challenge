@@ -237,6 +237,7 @@ dependencies = [
  "dyn-clone",
  "js-sys",
  "nalgebra",
+ "ray_tracer",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-bindgen-test",

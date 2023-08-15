@@ -38,6 +38,8 @@ nalgebra = "0.32.2"
 bracket-noise = "0.8.7"
 dyn-clone = "1.0.11"
 
+ray_tracer = { path = "../ray_tracer" }
+
 # The `web-sys` crate allows you to interact with the various browser APIs,
 # like the DOM.
 [dependencies.web-sys]

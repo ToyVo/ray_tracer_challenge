@@ -1,4 +1,4 @@
-use ray_tracer_challenge::{Canvas, Tuple};
+use ray_tracer::{Canvas, Tuple};
 
 struct Projectile {
     position: Tuple,

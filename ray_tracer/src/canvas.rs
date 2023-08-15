@@ -49,6 +49,20 @@ impl Canvas {
         file.write_all(self.to_string().as_bytes())?;
         Ok(())
     }
+
+    pub fn to_buffer(&self) -> Vec<u8> {
+        let mut buffer = Vec::with_capacity(self.cols * self.rows * 4);
+        for row in 0..self.rows {
+            for col in 0..self.cols {
+                let color = self.pixel_at(col, row);
+                buffer.push((color.r() * 255.0).round() as u8);
+                buffer.push((color.g() * 255.0).round() as u8);
+                buffer.push((color.b() * 255.0).round() as u8);
+                buffer.push(255);
+            }
+        }
+        buffer
+    }
 }
 
 impl std::fmt::Display for Canvas {

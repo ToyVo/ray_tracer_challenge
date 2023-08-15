@@ -1,3 +1,9 @@
+use std::f64::consts::PI;
+
+use ray_tracer::{
+    view_transform, BlendedPattern, Camera, CheckeredPattern, Light, Matrix, PerturbedPattern,
+    Plane, Shape, SolidPattern, Sphere, StripePattern, Transform, Tuple, World, Canvas
+};
 use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, this uses `wee_alloc` as the global
@@ -154,60 +160,59 @@ impl Universe {
 
 #[wasm_bindgen]
 pub struct PatternImage {
-    width: u32,
-    height: u32,
-    data: Vec<u32>,
+    canvas: Canvas,
+    data: Vec<u8>,
 }
 
+#[wasm_bindgen]
 impl PatternImage {
-    // pub fn set_pixel(&mut self, x: u32, y: u32, color: Vector3<f32>) {
-    //     let index = (y * self.width + x) as usize;
-    //     self.data[index] = 0xFF000000;
-    // }
-}
+    pub fn new() -> PatternImage {
+        let mut s1 = StripePattern::new(
+            Box::new(SolidPattern::new(Tuple::color(1., 1., 1.))),
+            Box::new(SolidPattern::new(Tuple::color(0.75, 0.75, 0.75))),
+        );
+        *s1.transform_mut() = Matrix::scaling(0.1, 0.1, 0.1);
+        let mut s2 = StripePattern::new(
+            Box::new(SolidPattern::new(Tuple::color(0.5, 0.5, 0.5))),
+            Box::new(SolidPattern::new(Tuple::color(0.25, 0.25, 0.25))),
+        );
+        *s2.transform_mut() = Matrix::scaling(0.1, 0.1, 0.1) * Matrix::rotation_y(PI / 2.);
 
-// #[wasm_bindgen]
-// impl PatternImage {
-//     pub fn new(width: u32, height: u32) -> PatternImage {
-//         let size = (width * height) as usize;
-//         let data = vec![0xFF000000; size];
-//
-//         let mut s1 = StripePattern::new(
-//             Box::new(SolidPattern::new(Vector3::new(1., 1., 1.))),
-//             Box::new(SolidPattern::new(Vector3::new(0.75, 0.75, 0.75))),
-//         );
-//         // *s1.transform_mut() = Matrix::scaling(0.1, 0.1, 0.1);
-//         let mut s2 = StripePattern::new(
-//             Box::new(SolidPattern::new(Vector3::new(0.5, 0.5, 0.5))),
-//             Box::new(SolidPattern::new(Vector3::new(0.25, 0.25, 0.25))),
-//         );
-//         // *s2.transform_mut() = Matrix::scaling(0.1, 0.1, 0.1) * Matrix::rotation_y(PI / 2.);
-//         let pattern =
-//             PerturbedPattern::new(Box::new(BlendedPattern::new(Box::new(s1), Box::new(s2))));
-//
-//         let mut image = PatternImage {
-//             width,
-//             height,
-//             data,
-//         };
-//
-//         for row in 0..height {
-//             for col in 0..width {
-//                 let point = Vector4::new(col as f64, 0., row as f64, 1.);
-//                 let color = pattern.pattern_at(&point);
-//                 image.set_pixel(col, row, color);
-//             }
-//         }
-//
-//         image
-//     }
-//     pub fn width(&self) -> u32 {
-//         self.width
-//     }
-//     pub fn height(&self) -> u32 {
-//         self.height
-//     }
-//     pub fn data(&self) -> *const u32 {
-//         self.data.as_ptr()
-//     }
-// }
+        let mut floor = Plane::new();
+        *floor.transform_mut() = Matrix::scaling(10., 0.01, 10.);
+        floor.material_mut().pattern = Box::new(PerturbedPattern::new(Box::new(
+            BlendedPattern::new(Box::new(s1), Box::new(s2)),
+        )));
+        floor.material_mut().specular = 0.;
+
+        let mut world = World::new();
+        world.objects = vec![
+            Box::new(floor),
+        ];
+        world.lights = vec![Light::new(
+            Tuple::point(0., 10., 0.),
+            Tuple::color(1., 1., 1.),
+        )];
+
+        let mut camera = Camera::new(256, 256, PI / 3.);
+        camera.transform = view_transform(
+            Tuple::point(0., 10., 0.),
+            Tuple::point(0., 0., 0.),
+            Tuple::vector(0., 0., 1.),
+        );
+
+        let canvas = camera.render(&world);
+        let data = canvas.to_buffer();
+
+        PatternImage { canvas, data }
+    }
+    pub fn width(&self) -> u32 {
+        self.canvas.width() as u32
+    }
+    pub fn height(&self) -> u32 {
+        self.canvas.height() as u32
+    }
+    pub fn data(&self) -> *const u8 {
+        self.data.as_ptr()
+    }
+}
