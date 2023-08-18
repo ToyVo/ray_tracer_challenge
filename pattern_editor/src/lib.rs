@@ -1,8 +1,8 @@
 use std::f64::consts::PI;
 
 use ray_tracer::{
-    view_transform, BlendedPattern, Camera, CheckeredPattern, Light, Matrix, PerturbedPattern,
-    Plane, Shape, SolidPattern, Sphere, StripePattern, Transform, Tuple, World, Canvas
+    view_transform, BlendedPattern, Camera, Canvas, CheckeredPattern, Light, Matrix,
+    PerturbedPattern, RingPattern, Plane, Shape, SolidPattern, Sphere, StripePattern, Transform, Tuple, World,
 };
 use wasm_bindgen::prelude::*;
 
@@ -185,20 +185,47 @@ impl PatternImage {
         )));
         floor.material_mut().specular = 0.;
 
+        let mut middle = Sphere::new();
+        *middle.transform_mut() = Matrix::translation(-0.5, 1., 0.5);
+        middle.material_mut().pattern = Box::new(RingPattern::new(
+            Box::new(SolidPattern::new(Tuple::color(0.1, 1., 0.5))),
+            Box::new(SolidPattern::new(Tuple::color(0.2, 0.5, 1.))),
+        ));
+        *middle.material_mut().pattern.transform_mut() = Matrix::scaling(0.2, 0.2, 0.2);
+        middle.material_mut().diffuse = 0.7;
+        middle.material_mut().specular = 0.3;
+
+        let mut right = Sphere::new();
+        *right.transform_mut() =
+            Matrix::translation(1.5, 0.5, -0.5) * Matrix::scaling(0.5, 0.5, 0.5);
+        right.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(0.5, 1., 0.1)));
+        right.material_mut().diffuse = 0.7;
+        right.material_mut().specular = 0.3;
+
+        let mut left = Sphere::new();
+        *left.transform_mut() =
+            Matrix::translation(-1.5, 0.33, -0.75) * Matrix::scaling(0.33, 0.33, 0.33);
+        left.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(1., 0.8, 0.1)));
+        left.material_mut().diffuse = 0.7;
+        left.material_mut().specular = 0.3;
+
         let mut world = World::new();
         world.objects = vec![
             Box::new(floor),
+            Box::new(middle),
+            Box::new(right),
+            Box::new(left),
         ];
         world.lights = vec![Light::new(
-            Tuple::point(0., 10., 0.),
+            Tuple::point(-10., 10., -10.),
             Tuple::color(1., 1., 1.),
         )];
 
         let mut camera = Camera::new(256, 256, PI / 3.);
         camera.transform = view_transform(
-            Tuple::point(0., 10., 0.),
-            Tuple::point(0., 0., 0.),
-            Tuple::vector(0., 0., 1.),
+            Tuple::point(0., 1.5, -5.),
+            Tuple::point(0., 1., 0.),
+            Tuple::vector(0., 1., 0.),
         );
 
         let canvas = camera.render(&world);

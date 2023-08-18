@@ -12,6 +12,7 @@ pub use sphere::*;
 pub use transformations::*;
 pub use tuple::*;
 pub use world::*;
+pub use noise::*;
 
 mod camera;
 mod canvas;
@@ -27,6 +28,7 @@ mod sphere;
 mod transformations;
 mod tuple;
 mod world;
+mod noise;
 
 pub trait Transform {
     fn transform(&self) -> &Matrix;

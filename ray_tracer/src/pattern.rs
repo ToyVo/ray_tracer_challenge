@@ -6,13 +6,13 @@ pub trait Pattern: std::fmt::Debug + DynClone + Transform {
     fn pattern_at(&self, point: &Tuple) -> Tuple;
     fn colors(&self) -> Vec<&Tuple>;
     fn pattern_at_object(&self, object: &dyn Shape, world_point: &Tuple) -> Tuple {
-        let object_point = object.transform().inverse() * world_point;
-        let pattern_point = self.transform().inverse() * &object_point;
+        let target_point = object.transform().inverse() * world_point;
+        let pattern_point = self.transform().inverse() * &target_point;
         self.pattern_at(&pattern_point)
     }
-    fn pattern_at_pattern(&self, object: &dyn Pattern, world_point: &Tuple) -> Tuple {
-        let object_point = object.transform().inverse() * world_point;
-        let pattern_point = self.transform().inverse() * &object_point;
+    fn pattern_at_pattern(&self, pattern: &dyn Pattern, world_point: &Tuple) -> Tuple {
+        let target_point = pattern.transform().inverse() * world_point;
+        let pattern_point = self.transform().inverse() * &target_point;
         self.pattern_at(&pattern_point)
     }
 }
@@ -288,20 +288,26 @@ impl Pattern for PerturbedPattern {
     fn pattern_at(&self, point: &Tuple) -> Tuple {
         let mut noise = FastNoise::new();
         noise.set_noise_type(NoiseType::SimplexFractal);
-        self.pattern.pattern_at_pattern(
-            self,
-            &Tuple::point(
-                point.x()
-                    + noise.get_noise3d(point.x() as f32, point.y() as f32, point.z() as f32)
-                        as f64,
-                point.y()
-                    + noise.get_noise3d(point.x() as f32, point.y() as f32, point.z() as f32 + 1.)
-                        as f64,
-                point.z()
-                    + noise.get_noise3d(point.x() as f32, point.y() as f32, point.z() as f32 + 2.)
-                        as f64,
-            ),
-        )
+        noise.set_fractal_octaves(3);
+        noise.set_fractal_gain(0.8);
+        let scale = 0.2;
+        let pscale = 1.0;
+
+        let x = point.x() as f32 * pscale;
+        let y = point.y() as f32 * pscale;
+        let z = point.z() as f32 * pscale;
+
+        let noise_x = noise.get_noise3d(x, y, z) as f64 * scale;
+        let noise_y = noise.get_noise3d(x, y, z + 1.) as f64 * scale;
+        let noise_z = noise.get_noise3d(x, y, z + 2.) as f64 * scale;
+
+        let new_x = point.x() + noise_x;
+        let new_y = point.y() + noise_y;
+        let new_z = point.z() + noise_z;
+
+        let new_point = Tuple::point(new_x, new_y, new_z);
+
+        self.pattern.pattern_at_pattern(self, &new_point)
     }
 
     fn colors(&self) -> Vec<&Tuple> {
