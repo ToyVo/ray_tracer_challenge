@@ -423,7 +423,7 @@ mod tests {
     fn stripe_pattern_with_object_transformation() {
         let white = Tuple::color(1.0, 1.0, 1.0);
         let black = Tuple::color(0.0, 0.0, 0.0);
-        let mut shape = Sphere::new();
+        let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
         let pattern = StripePattern::new(
             Box::new(SolidPattern::new(white.clone())),
@@ -437,7 +437,7 @@ mod tests {
     fn stripe_pattern_with_pattern_transformation() {
         let white = Tuple::color(1.0, 1.0, 1.0);
         let black = Tuple::color(0.0, 0.0, 0.0);
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let mut pattern = StripePattern::new(
             Box::new(SolidPattern::new(white.clone())),
             Box::new(SolidPattern::new(black.clone())),
@@ -451,7 +451,7 @@ mod tests {
     fn stripe_pattern_with_both_object_and_pattern_transformation() {
         let white = Tuple::color(1.0, 1.0, 1.0);
         let black = Tuple::color(0.0, 0.0, 0.0);
-        let mut shape = Sphere::new();
+        let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
         let mut pattern = StripePattern::new(
             Box::new(SolidPattern::new(white.clone())),
@@ -477,7 +477,7 @@ mod tests {
 
     #[test]
     fn pattern_with_object_transformation() {
-        let mut shape = Sphere::new();
+        let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
         let pattern = TestPattern::new();
         let color = pattern.pattern_at_object(&shape, &Tuple::point(2.0, 3.0, 4.0));
@@ -486,7 +486,7 @@ mod tests {
 
     #[test]
     fn pattern_with_pattern_transformation() {
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let mut pattern = TestPattern::new();
         *pattern.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
         let color = pattern.pattern_at_object(&shape, &Tuple::point(2.0, 3.0, 4.0));
@@ -495,7 +495,7 @@ mod tests {
 
     #[test]
     fn pattern_with_both_object_and_pattern_transformation() {
-        let mut shape = Sphere::new();
+        let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
         let mut pattern = TestPattern::new();
         *pattern.transform_mut() = Matrix::translation(0.5, 1.0, 1.5);

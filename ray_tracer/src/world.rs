@@ -14,11 +14,11 @@ impl World {
     }
 
     pub fn default() -> World {
-        let mut s1 = Sphere::new();
+        let mut s1 = Sphere::new(0);
         s1.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(0.8, 1.0, 0.6)));
         s1.material_mut().diffuse = 0.7;
         s1.material_mut().specular = 0.2;
-        let mut s2 = Sphere::new();
+        let mut s2 = Sphere::new(1);
         *s2.transform_mut() = Matrix::scaling(0.5, 0.5, 0.5);
         let light = Light::new(Tuple::point(-10.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         World {
@@ -151,8 +151,8 @@ mod tests {
     #[test]
     fn color_intersection_behind_ray() {
         let mut world = World::default();
-        Box::get_mut(&mut world.objects[0]).unwrap().material_mut().ambient = 1.;
-        Box::get_mut(&mut world.objects[1]).unwrap().material_mut().ambient = 1.;
+        world.objects[0].material_mut().ambient = 1.;
+        world.objects[1].material_mut().ambient = 1.;
         let ray = Ray::new(Tuple::point(0., 0., 0.75), Tuple::vector(0., 0., -1.));
         let color = world.color_at(&ray);
         assert_eq!(&color, world.objects[1].material().pattern.colors()[0])
@@ -190,8 +190,8 @@ mod tests {
     fn shade_hit_given_intersection_in_shadow() {
         let mut world = World::default();
         world.lights = vec![Light::new(Tuple::point(0., 0., -10.), Tuple::color(1., 1., 1.))];
-        let shape_a = Sphere::new();
-        let mut shape_b = Sphere::new();
+        let shape_a = Sphere::new(0);
+        let mut shape_b = Sphere::new(1);
         shape_b.transform_mut().translate(0., 0., 10.);
         world.objects = vec![Box::new(shape_a), Box::new(shape_b)];
         let ray = Ray::new(Tuple::point(0., 0., 5.), Tuple::vector(0., 0., 1.));

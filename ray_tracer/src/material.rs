@@ -80,7 +80,7 @@ mod tests {
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
         assert_eq!(result, Tuple::color(1.9, 1.9, 1.9));
     }
@@ -92,7 +92,7 @@ mod tests {
         let eye_vector = Tuple::vector(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
         assert_eq!(result, Tuple::color(1.0, 1.0, 1.0));
     }
@@ -104,7 +104,7 @@ mod tests {
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
         assert!(result.nearly_equals(&Tuple::color(0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1), 1e-3f64));
     }
@@ -116,7 +116,7 @@ mod tests {
         let eye_vector = Tuple::vector(0.0, -SQRT_2 / 2.0, -SQRT_2 / 2.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
         assert_eq!(result, Tuple::color(0.9 * SQRT_2 / 2. + 1., 0.9 * SQRT_2 / 2. + 1., 0.9 * SQRT_2 / 2. + 1.));
     }
@@ -128,7 +128,7 @@ mod tests {
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, 10.0), Tuple::color(1.0, 1.0, 1.0));
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
         assert_eq!(result, Tuple::color(0.1, 0.1, 0.1));
     }
@@ -140,7 +140,7 @@ mod tests {
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, true);
         assert_eq!(result, Tuple::color(0.1, 0.1, 0.1));
     }
@@ -155,7 +155,7 @@ mod tests {
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let color_a = material.lighting(&shape, &light, &Tuple::point(0.9, 0.0, 0.0), &eye_vector, &normal_vector, false);
         let color_b = material.lighting(&shape, &light, &Tuple::point(1.1, 0.0, 0.0), &eye_vector, &normal_vector, false);
         assert_eq!(color_a, Tuple::color(1.0, 1.0, 1.0));

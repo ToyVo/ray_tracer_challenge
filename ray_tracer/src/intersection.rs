@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn intersection_encapsulates_t_and_object() {
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let intersection = Intersection::new(3.5, Box::new(shape.clone()));
         assert_eq!(intersection.t, 3.5);
         assert!(<dyn Shape>::eq(&shape, &intersection.object));
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn aggregating_intersections() {
-        let shape = Box::new(Sphere::new());
+        let shape = Box::new(Sphere::new(0));
         let i1 = Intersection::new(1.0, shape.clone());
         let i2 = Intersection::new(2.0, shape);
         let intersections = vec![i1, i2];
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn when_all_intersections_have_positive_t() {
-        let shape = Box::new(Sphere::new());
+        let shape = Box::new(Sphere::new(0));
         let i1 = Intersection::new(1.0, shape.clone());
         let i2 = Intersection::new(2.0, shape);
         let intersections = vec![i1.clone(), i2];
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn when_some_intersections_have_negative_t() {
-        let shape = Box::new(Sphere::new());
+        let shape = Box::new(Sphere::new(0));
         let i1 = Intersection::new(-1.0, shape.clone());
         let i2 = Intersection::new(1.0, shape);
         let intersections = vec![i1, i2.clone()];
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn when_all_intersections_have_negative_t() {
-        let shape = Box::new(Sphere::new());
+        let shape = Box::new(Sphere::new(0));
         let i1 = Intersection::new(-2.0, shape.clone());
         let i2 = Intersection::new(-1.0, shape);
         let intersections = vec![i1, i2];
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn hit_always_lowest_nonnegative_intersection() {
-        let shape = Box::new(Sphere::new());
+        let shape = Box::new(Sphere::new(0));
         let i1 = Intersection::new(5.0, shape.clone());
         let i2 = Intersection::new(7.0, shape.clone());
         let i3 = Intersection::new(-3.0, shape.clone());
@@ -135,7 +135,7 @@ mod tests {
     #[test]
     fn precomputing_state_of_intersection() {
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
-        let shape = Sphere::new();
+        let shape = Sphere::new(0);
         let intersection = Intersection::new(4., Box::new(shape.clone()));
         let comps = intersection.prepare_computations(&ray);
         assert_eq!(comps.t, intersection.t);
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn hit_when_intersection_inside() {
         let ray = Ray::new(Tuple::point(0., 0., 0.), Tuple::vector(0., 0., 1.));
-        let shape = Box::new(Sphere::new());
+        let shape = Box::new(Sphere::new(0));
         let intersection = Intersection::new(1., shape);
         let comps = intersection.prepare_computations(&ray);
         assert_eq!(comps.point, Tuple::point(0., 0., 1.));
@@ -162,7 +162,7 @@ mod tests {
     #[test]
     fn hit_should_offset_point() {
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
-        let mut shape = Sphere::new();
+        let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::translation(0., 0., 1.);
         let intersection = Intersection::new(5., Box::new(shape));
         let comps = intersection.prepare_computations(&ray);

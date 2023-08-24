@@ -1,4 +1,4 @@
-use crate::{Ray, Material, Intersection, Tuple, Transform};
+use crate::{Intersection, Material, Ray, Transform, Tuple};
 use dyn_clone::DynClone;
 
 pub trait Shape: std::fmt::Debug + DynClone + Transform {
@@ -16,32 +16,34 @@ pub trait Shape: std::fmt::Debug + DynClone + Transform {
         let world_normal = &self.transform().inverse().transpose() * &local_normal;
         world_normal.to_vector().normalize()
     }
+    fn id(&self) -> u32;
 }
 
 dyn_clone::clone_trait_object!(Shape);
 
 impl PartialEq for dyn Shape {
     fn eq(&self, other: &dyn Shape) -> bool {
-        self.transform() == other.transform() && self.material() == other.material()
+        self.id() == other.id()
     }
 }
 
 impl PartialEq<Box<dyn Shape>> for dyn Shape {
     fn eq(&self, other: &Box<dyn Shape>) -> bool {
-        self.transform() == other.transform() && self.material() == other.material()
+        self.id() == other.id()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64::consts::SQRT_2;
     use crate::Matrix;
+    use std::f64::consts::SQRT_2;
 
     #[derive(Debug, PartialEq, Clone)]
     struct TestShape {
         transform: Matrix,
         material: Material,
+        id: u32,
     }
 
     static mut RAY: Option<Ray> = None;
@@ -72,6 +74,10 @@ mod tests {
         fn local_normal_at(&self, point: &Tuple) -> Tuple {
             point.clone()
         }
+
+        fn id(&self) -> u32 {
+            self.id
+        }
     }
 
     #[test]
@@ -79,11 +85,18 @@ mod tests {
         let shape = TestShape {
             transform: Matrix::scaling(2., 2., 2.),
             material: Material::new(),
+            id: 0,
         };
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
         shape.intersect(&ray);
         unsafe {
-            assert_eq!(RAY, Some(Ray::new(Tuple::point(0., 0., -2.5), Tuple::vector(0., 0., 0.5))));
+            assert_eq!(
+                RAY,
+                Some(Ray::new(
+                    Tuple::point(0., 0., -2.5),
+                    Tuple::vector(0., 0., 0.5)
+                ))
+            );
         }
     }
 
@@ -92,11 +105,18 @@ mod tests {
         let shape = TestShape {
             transform: Matrix::translation(5., 0., 0.),
             material: Material::new(),
+            id: 0,
         };
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
         shape.intersect(&ray);
         unsafe {
-            assert_eq!(RAY, Some(Ray::new(Tuple::point(-5., 0., -5.), Tuple::vector(0., 0., 1.))));
+            assert_eq!(
+                RAY,
+                Some(Ray::new(
+                    Tuple::point(-5., 0., -5.),
+                    Tuple::vector(0., 0., 1.)
+                ))
+            );
         }
     }
 
@@ -105,6 +125,7 @@ mod tests {
         let shape = TestShape {
             transform: Matrix::translation(0., 1., 0.),
             material: Material::new(),
+            id: 0,
         };
         let normal = shape.normal_at(&Tuple::point(0., 1.70711, -0.70711));
         assert!(normal.nearly_equals(&Tuple::vector(0., 0.70711, -0.70711), 1e-3f64));
@@ -115,6 +136,7 @@ mod tests {
         let shape = TestShape {
             transform: Matrix::scaling(1., 0.5, 1.) * Matrix::rotation_z(std::f64::consts::PI / 5.),
             material: Material::new(),
+            id: 0,
         };
         let normal = shape.normal_at(&Tuple::point(0., SQRT_2 / 2., -SQRT_2 / 2.));
         assert!(normal.nearly_equals(&Tuple::vector(0., 0.97014, -0.24254), 1e-3f64));
