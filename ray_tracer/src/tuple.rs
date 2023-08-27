@@ -514,7 +514,7 @@ mod tests {
         let color_b = Tuple::color(0.7, 0.1, 0.25);
         let expected = Tuple::color(0.2, 0.5, 0.5);
         let result = color_a - color_b;
-        assert!(result.nearly_equals(&expected, 1e-3f64))
+        assert!(result.nearly_equals(&expected, 1e-5f64))
     }
 
     #[test]
@@ -529,7 +529,7 @@ mod tests {
         let color_b = Tuple::color(0.9, 1.0, 0.1);
         let expected = Tuple::color(0.9, 0.2, 0.04);
         let result = color_a * color_b;
-        assert!(result.nearly_equals(&expected, 1e-3f64))
+        assert!(result.nearly_equals(&expected, 1e-5f64))
     }
 
     #[test]
@@ -554,6 +554,6 @@ mod tests {
         let normal = Tuple::vector(2.0_f64.sqrt() / 2., 2.0_f64.sqrt() / 2., 0.);
         let ray = vector.reflect(&normal);
         let expected = Tuple::vector(1., 0., 0.);
-        assert!(ray.nearly_equals(&expected, 1e-3f64));
+        assert!(ray.nearly_equals(&expected, 1e-5f64));
     }
 }

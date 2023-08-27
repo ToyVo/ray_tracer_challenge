@@ -326,18 +326,18 @@ impl Transform for PerturbedPattern {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use crate::Sphere;
 
     #[derive(Debug, Clone)]
-    struct TestPattern {
+    pub struct TestPattern {
         transform: Matrix,
         color: Tuple,
     }
 
     impl TestPattern {
-        fn new() -> TestPattern {
+        pub fn new() -> TestPattern {
             TestPattern {
                 transform: Matrix::identity(4),
                 color: Tuple::color(0., 0., 0.),

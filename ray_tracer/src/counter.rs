@@ -7,7 +7,7 @@ impl Counter {
         Self { count: 0 }
     }
 
-    pub fn increment(&mut self) -> u32 {
+    pub fn next(&mut self) -> u32 {
         let id = self.count;
         self.count += 1;
         id

@@ -45,7 +45,7 @@ impl Camera {
         for y in 0..self.v_size {
             for x in 0..self.h_size {
                 let ray = self.ray_for_pixel(x, y);
-                let color = world.color_at(&ray);
+                let color = world.color_at(&ray, 5);
                 image.write_pixel(x, y, color);
             }
         }
@@ -75,13 +75,13 @@ mod tests {
     #[test]
     fn pixel_size_horizontal_canvas() {
         let camera = Camera::new(200, 125, PI / 2.);
-        assert!(camera.pixel_size - 0.01 < 1e-3f64);
+        assert!(camera.pixel_size - 0.01 < 1e-5f64);
     }
 
     #[test]
     fn pixel_size_vertical_canvas() {
         let camera = Camera::new(125, 200, PI / 2.);
-        assert!(camera.pixel_size - 0.01 < 1e-3f64);
+        assert!(camera.pixel_size - 0.01 < 1e-5f64);
     }
 
     #[test]
@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(ray.origin, Tuple::point(0., 0., 0.));
         assert!(ray
             .direction
-            .nearly_equals(&Tuple::vector(0., 0., -1.), 1e-3f64));
+            .nearly_equals(&Tuple::vector(0., 0., -1.), 1e-5f64));
     }
 
     #[test]
@@ -101,7 +101,7 @@ mod tests {
         assert_eq!(ray.origin, Tuple::point(0., 0., 0.));
         assert!(ray
             .direction
-            .nearly_equals(&Tuple::vector(0.66519, 0.33259, -0.66851), 1e-3f64));
+            .nearly_equals(&Tuple::vector(0.66519, 0.33259, -0.66851), 1e-5f64));
     }
 
     #[test]
@@ -112,7 +112,7 @@ mod tests {
         assert_eq!(ray.origin, Tuple::point(0., 2., -5.));
         assert!(ray
             .direction
-            .nearly_equals(&Tuple::vector(SQRT_2 / 2., 0., -SQRT_2 / 2.), 1e-3f64));
+            .nearly_equals(&Tuple::vector(SQRT_2 / 2., 0., -SQRT_2 / 2.), 1e-5f64));
     }
 
     #[test]
@@ -126,6 +126,6 @@ mod tests {
         let image = camera.render(&world);
         assert!(image
             .pixel_at(5, 5)
-            .nearly_equals(&Tuple::color(0.38066, 0.47583, 0.2855), 1e-3f64));
+            .nearly_equals(&Tuple::color(0.38066, 0.47583, 0.2855), 1e-5f64));
     }
 }

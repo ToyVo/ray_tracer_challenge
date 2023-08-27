@@ -709,7 +709,7 @@ mod tests {
         );
         let product = &matrix_a * &matrix_b;
         let result = product * matrix_b.inverse();
-        assert!(matrix_a.nearly_equals(&result, 1e-3f64));
+        assert!(matrix_a.nearly_equals(&result, 1e-5f64));
     }
 
     #[test]
@@ -778,8 +778,8 @@ mod tests {
         let expected_full = Tuple::point(0., 0., 1.);
         let result_half = half_quarter * &point;
         let result_full = full_quarter * point;
-        assert!(expected_half.nearly_equals(&result_half, 1e-3f64));
-        assert!(expected_full.nearly_equals(&result_full, 1e-3f64));
+        assert!(expected_half.nearly_equals(&result_half, 1e-5f64));
+        assert!(expected_full.nearly_equals(&result_full, 1e-5f64));
     }
 
     #[test]
@@ -789,7 +789,7 @@ mod tests {
         let inv = half_quarter.inverse();
         let expected = Tuple::point(0., SQRT_2 / 2., -SQRT_2 / 2.);
         let result = inv * point;
-        assert!(expected.nearly_equals(&result, 1e-3f64));
+        assert!(expected.nearly_equals(&result, 1e-5f64));
     }
 
     #[test]
@@ -801,8 +801,8 @@ mod tests {
         let expected_full = Tuple::point(1., 0., 0.);
         let result_half = half_quarter * &point;
         let result_full = full_quarter * point;
-        assert!(expected_half.nearly_equals(&result_half, 1e-3f64));
-        assert!(expected_full.nearly_equals(&result_full, 1e-3f64));
+        assert!(expected_half.nearly_equals(&result_half, 1e-5f64));
+        assert!(expected_full.nearly_equals(&result_full, 1e-5f64));
     }
 
     #[test]
@@ -814,8 +814,8 @@ mod tests {
         let expected_full = Tuple::point(-1., 0., 0.);
         let result_half = half_quarter * &point;
         let result_full = full_quarter * point;
-        assert!(expected_half.nearly_equals(&result_half, 1e-3f64));
-        assert!(expected_full.nearly_equals(&result_full, 1e-3f64));
+        assert!(expected_half.nearly_equals(&result_half, 1e-5f64));
+        assert!(expected_full.nearly_equals(&result_full, 1e-5f64));
     }
 
     #[test]
@@ -873,9 +873,9 @@ mod tests {
         let scale = Matrix::scaling(5., 5., 5.);
         let translate = Matrix::translation(10., 5., 7.);
         let rotated_point = rotate * point;
-        assert!(Tuple::point(1., -1., 0.).nearly_equals(&rotated_point, 1e-3f64));
+        assert!(Tuple::point(1., -1., 0.).nearly_equals(&rotated_point, 1e-5f64));
         let scaled_point = scale * rotated_point;
-        assert!(Tuple::point(5., -5., 0.).nearly_equals(&scaled_point, 1e-3f64));
+        assert!(Tuple::point(5., -5., 0.).nearly_equals(&scaled_point, 1e-5f64));
         let translated_point = translate * scaled_point;
         assert_eq!(translated_point, Tuple::point(15., 0., 7.));
     }

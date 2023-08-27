@@ -7,6 +7,9 @@ pub struct Material {
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
+    pub reflective: f64,
+    pub transparency: f64,
+    pub refractive_index: f64,
 }
 
 impl PartialEq for Material {
@@ -27,6 +30,9 @@ impl Material {
             diffuse: 0.9,
             specular: 0.9,
             shininess: 200.0,
+            reflective: 0.0,
+            transparency: 0.0,
+            refractive_index: 1.0,
         }
     }
 
@@ -106,7 +112,7 @@ mod tests {
         let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
         let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
-        assert!(result.nearly_equals(&Tuple::color(0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1), 1e-3f64));
+        assert!(result.nearly_equals(&Tuple::color(0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1), 1e-5f64));
     }
 
     #[test]
@@ -160,5 +166,18 @@ mod tests {
         let color_b = material.lighting(&shape, &light, &Tuple::point(1.1, 0.0, 0.0), &eye_vector, &normal_vector, false);
         assert_eq!(color_a, Tuple::color(1.0, 1.0, 1.0));
         assert_eq!(color_b, Tuple::color(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn reflectivity_for_default_material() {
+        let material = Material::new();
+        assert_eq!(material.reflective, 0.0);
+    }
+
+    #[test]
+    fn transparency_and_refractive_index_for_default_material() {
+        let material = Material::new();
+        assert_eq!(material.transparency, 0.0);
+        assert_eq!(material.refractive_index, 1.0);
     }
 }

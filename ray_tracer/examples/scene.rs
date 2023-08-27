@@ -2,11 +2,11 @@ use std::f64::consts::PI;
 
 use ray_tracer::{
     view_transform, BlendedPattern, Camera, CheckeredPattern, Light, Matrix, Plane, Shape,
-    SolidPattern, Sphere, StripePattern, Tuple, World, Transform, PerturbedPattern, Counter,
+    SolidPattern, Sphere, StripePattern, Tuple, World, Transform, PerturbedPattern
 };
 
 fn main() {
-    let mut counter = Counter::new();
+    let mut world = World::new();
     let mut s1 = StripePattern::new(
         Box::new(SolidPattern::new(Tuple::color(1., 1., 1.))),
         Box::new(SolidPattern::new(Tuple::color(0.75, 0.75, 0.75))),
@@ -18,12 +18,12 @@ fn main() {
     );
     *s2.transform_mut() = Matrix::scaling(0.1, 0.1, 0.1) * Matrix::rotation_y(PI / 2.);
 
-    let mut floor = Plane::new(counter.increment());
+    let mut floor = Plane::new(world.counter.next());
     *floor.transform_mut() = Matrix::scaling(10., 0.01, 10.);
     floor.material_mut().pattern = Box::new(PerturbedPattern::new(Box::new(BlendedPattern::new(Box::new(s1), Box::new(s2)))));
     floor.material_mut().specular = 0.;
 
-    let mut middle = Sphere::new(counter.increment());
+    let mut middle = Sphere::new(world.counter.next());
     *middle.transform_mut() = Matrix::translation(-0.5, 1., 0.5);
     middle.material_mut().pattern = Box::new(CheckeredPattern::new(
         Box::new(SolidPattern::new(Tuple::color(0.1, 1., 0.5))),
@@ -33,20 +33,19 @@ fn main() {
     middle.material_mut().diffuse = 0.7;
     middle.material_mut().specular = 0.3;
 
-    let mut right = Sphere::new(counter.increment());
+    let mut right = Sphere::new(world.counter.next());
     *right.transform_mut() = Matrix::translation(1.5, 0.5, -0.5) * Matrix::scaling(0.5, 0.5, 0.5);
     right.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(0.5, 1., 0.1)));
     right.material_mut().diffuse = 0.7;
     right.material_mut().specular = 0.3;
 
-    let mut left = Sphere::new(counter.increment());
+    let mut left = Sphere::new(world.counter.next());
     *left.transform_mut() =
         Matrix::translation(-1.5, 0.33, -0.75) * Matrix::scaling(0.33, 0.33, 0.33);
     left.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(1., 0.8, 0.1)));
     left.material_mut().diffuse = 0.7;
     left.material_mut().specular = 0.3;
 
-    let mut world = World::new();
     world.objects = vec![
         Box::new(floor),
         Box::new(middle),

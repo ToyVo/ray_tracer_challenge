@@ -15,6 +15,13 @@ impl Sphere {
             id,
         }
     }
+
+    pub fn glass(id: u32) -> Sphere {
+        let mut sphere = Sphere::new(id);
+        sphere.material_mut().transparency = 1.0;
+        sphere.material_mut().refractive_index = 1.5;
+        sphere
+    }
 }
 
 impl Shape for Sphere {
@@ -209,7 +216,7 @@ mod tests {
         let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::translation(0.0, 1.0, 0.0);
         let normal = shape.normal_at(&Tuple::point(0.0, FRAC_1_SQRT_2 + 1., -FRAC_1_SQRT_2));
-        assert!(normal.nearly_equals(&Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2), 1e-3f64));
+        assert!(normal.nearly_equals(&Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2), 1e-5f64));
     }
 
     #[test]
@@ -221,7 +228,7 @@ mod tests {
             SQRT_2 / 2.0,
             -SQRT_2 / 2.0,
         ));
-        assert!(normal.nearly_equals(&Tuple::vector(0.0, 0.97014, -0.24254), 1e-3f64));
+        assert!(normal.nearly_equals(&Tuple::vector(0.0, 0.97014, -0.24254), 1e-5f64));
     }
 
     #[test]
@@ -237,5 +244,12 @@ mod tests {
         material.ambient = 1.0;
         shape.material_mut().ambient = 1.0;
         assert_eq!(shape.material(), &material);
+    }
+
+    #[test]
+    fn sphere_with_glassy_material() {
+        let sphere = Sphere::glass(0);
+        assert_eq!(sphere.material().transparency, 1.0);
+        assert_eq!(sphere.material().refractive_index, 1.5);
     }
 }

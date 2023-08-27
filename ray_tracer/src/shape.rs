@@ -128,7 +128,7 @@ mod tests {
             id: 0,
         };
         let normal = shape.normal_at(&Tuple::point(0., 1.70711, -0.70711));
-        assert!(normal.nearly_equals(&Tuple::vector(0., 0.70711, -0.70711), 1e-3f64));
+        assert!(normal.nearly_equals(&Tuple::vector(0., 0.70711, -0.70711), 1e-5f64));
     }
 
     #[test]
@@ -139,6 +139,6 @@ mod tests {
             id: 0,
         };
         let normal = shape.normal_at(&Tuple::point(0., SQRT_2 / 2., -SQRT_2 / 2.));
-        assert!(normal.nearly_equals(&Tuple::vector(0., 0.97014, -0.24254), 1e-3f64));
+        assert!(normal.nearly_equals(&Tuple::vector(0., 0.97014, -0.24254), 1e-5f64));
     }
 }
