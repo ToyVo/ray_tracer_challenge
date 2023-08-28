@@ -123,7 +123,7 @@ impl World {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Material, Plane};
+    use crate::{Material, Plane, TestPattern};
     use std::f64::consts::SQRT_2;
 
     #[test]
@@ -394,7 +394,6 @@ mod tests {
     fn refracted_color_with_refracted_ray() {
         let mut world = World::default();
         world.objects[0].material_mut().ambient = 1.;
-        use crate::tests::TestPattern;
         world.objects[0].material_mut().pattern = Box::new(TestPattern::new());
         world.objects[1].material_mut().transparency = 1.;
         world.objects[1].material_mut().refractive_index = 1.5;
