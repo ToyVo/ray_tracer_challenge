@@ -1,7 +1,9 @@
 pub use camera::Camera;
 pub use canvas::Canvas;
+pub use cone::Cone;
 pub use counter::Counter;
 pub use cube::Cube;
+pub use cylinder::Cylinder;
 pub use intersection::{Computations, Intersection};
 pub use light::Light;
 pub use material::Material;
@@ -23,8 +25,10 @@ pub use pattern::tests::TestPattern;
 
 mod camera;
 mod canvas;
+mod cone;
 mod counter;
 mod cube;
+mod cylinder;
 mod intersection;
 mod light;
 mod material;
