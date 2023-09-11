@@ -1,23 +1,16 @@
 {
   "name": "pattern_editor",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
   "scripts": {
-    "build": "node -r esbuild-register build.ts",
-    "dev": "node -r esbuild-register server.ts"
+    "build:wasm": "wasm-pack build",
+    "build": "bun run build:wasm && bun run build.ts",
+    "dev": "bun run build:wasm && bun run server.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
+    "bun-types": "latest",
     "esbuild": "^0.19.0",
-    "esbuild-plugin-wasm": "^1.1.0",
-    "esbuild-plugin-wasm-pack": "^1.1.0",
-    "esbuild-register": "^3.4.2",
-    "nodemon": "^3.0.1"
+    "esbuild-plugin-wasm": "^1.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   }
 }

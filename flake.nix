@@ -23,7 +23,7 @@
               rustfmt
               rust-analyzer
               wasm-pack
-              nodejs
+              bun
               trunk
               (rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
                 extensions = [ "rust-src" ];

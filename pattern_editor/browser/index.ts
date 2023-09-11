@@ -1,8 +1,3 @@
-if (DEBUG) {
-    new EventSource("/esbuild").addEventListener("change", () =>
-        location.reload(),
-    );
-}
 import { PatternImage } from "../pkg/pattern_editor";
 import { memory } from "../pkg/pattern_editor_bg.wasm";
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
