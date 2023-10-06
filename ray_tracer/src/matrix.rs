@@ -22,12 +22,12 @@ impl Matrix {
 
     pub fn get(&self, x: usize, y: usize) -> f64 {
         assert!(x < self.cols && y < self.rows);
-        self.data[y * self.cols + x]
+        self.data[y + self.rows * x]
     }
 
     pub fn set(&mut self, x: usize, y: usize, value: f64) {
         assert!(x < self.cols && y < self.rows);
-        self.data[y * self.cols + x] = value;
+        self.data[y + self.rows * x] = value;
     }
 
     pub fn cols(&self) -> usize {
@@ -375,7 +375,7 @@ mod tests {
             4,
             4,
             vec![
-                1., 2., 3., 4., 5.5, 6.5, 7.5, 8.5, 9., 10., 11., 12., 13.5, 14.5, 15.5, 16.5,
+                1., 5.5, 9., 13.5, 2., 6.5, 10., 14.5, 3., 7.5, 11., 15.5, 4., 8.5, 12., 16.5,
             ],
         );
         assert_eq!(matrix.get(0, 0), 1.);
@@ -389,7 +389,7 @@ mod tests {
 
     #[test]
     fn constructing_2x2_matrix() {
-        let matrix = Matrix::from_vec(2, 2, vec![-3., 5., 1., -2.]);
+        let matrix = Matrix::from_vec(2, 2, vec![-3., 1., 5., -2.]);
         assert_eq!(matrix.get(0, 0), -3.);
         assert_eq!(matrix.get(1, 0), 5.);
         assert_eq!(matrix.get(0, 1), 1.);
@@ -398,7 +398,7 @@ mod tests {
 
     #[test]
     fn construction_3x3_matrix() {
-        let matrix = Matrix::from_vec(3, 3, vec![-3., 5., 0., 1., -2., -7., 0., 1., 1.]);
+        let matrix = Matrix::from_vec(3, 3, vec![-3., 1., 0., 5., -2., 1., 0., -7., 1.]);
         assert_eq!(matrix.get(0, 0), -3.);
         assert_eq!(matrix.get(1, 1), -2.);
         assert_eq!(matrix.get(2, 2), 1.);
@@ -448,21 +448,21 @@ mod tests {
             4,
             4,
             vec![
-                1., 2., 3., 4., 5., 6., 7., 8., 9., 8., 7., 6., 5., 4., 3., 2.,
+                1., 5., 9., 5., 2., 6., 8., 4., 3., 7., 7., 3., 4., 8., 6., 2.,
             ],
         );
         let matrix_b = Matrix::from_vec(
             4,
             4,
             vec![
-                -2., 1., 2., 3., 3., 2., 1., -1., 4., 3., 6., 5., 1., 2., 7., 8.,
+                -2., 3., 4., 1., 1., 2., 3., 2., 2., 1., 6., 7., 3., -1., 5., 8.,
             ],
         );
         let expected = Matrix::from_vec(
             4,
             4,
             vec![
-                20., 22., 50., 48., 44., 54., 114., 108., 40., 58., 110., 102., 16., 26., 46., 42.,
+                20., 44., 40., 16., 22., 54., 58., 26., 50., 114., 110., 46., 48., 108., 102., 42.,
             ],
         );
         assert_eq!(matrix_a * matrix_b, expected);
@@ -474,7 +474,7 @@ mod tests {
             4,
             4,
             vec![
-                1., 2., 3., 4., 2., 4., 4., 2., 8., 6., 4., 1., 0., 0., 0., 1.,
+                1., 2., 8., 0., 2., 4., 6., 0., 3., 4., 4., 0., 4., 2., 1., 1.,
             ],
         );
         let point = Tuple::from_vec(vec![1., 2., 3., 1.]);
@@ -488,7 +488,7 @@ mod tests {
             4,
             4,
             vec![
-                1., 2., 3., 4., 5., 6., 7., 8., 9., 0., 1., 2., 3., 4., 5., 6.,
+                1., 5., 9., 3., 2., 6., 0., 4., 3., 7., 1., 5., 4., 8., 2., 6.,
             ],
         );
         let expected = Tuple::from_vec(vec![1., 2., 3., 4.]);
@@ -501,7 +501,7 @@ mod tests {
             4,
             4,
             vec![
-                1., 2., 3., 4., 5., 6., 7., 8., 9., 0., 1., 2., 3., 4., 5., 6.,
+                1., 5., 9., 3., 2., 6., 0., 4., 3., 7., 1., 5., 4., 8., 2., 6.,
             ],
         );
         let expected = Tuple::from_vec(vec![1., 5., 9., 3.]);
@@ -547,14 +547,14 @@ mod tests {
 
     #[test]
     fn calculating_determinant_of_2x2_matrix() {
-        let matrix = Matrix::from_vec(2, 2, vec![1., 5., -3., 2.]);
+        let matrix = Matrix::from_vec(2, 2, vec![1., -3., 5., 2.]);
         assert_eq!(matrix.determinant(), 17.);
     }
 
     #[test]
     fn submatrix_of_3x3_is_2x2() {
-        let matrix = Matrix::from_vec(3, 3, vec![1., 5., 0., -3., 2., 7., 0., 6., -3.]);
-        let expected = Matrix::from_vec(2, 2, vec![-3., 2., 0., 6.]);
+        let matrix = Matrix::from_vec(3, 3, vec![1., -3., 0., 5., 2., 6., 0., 7., -3.]);
+        let expected = Matrix::from_vec(2, 2, vec![-3., 0., 2., 6.]);
         assert_eq!(matrix.submatrix(2, 0), expected);
     }
 
@@ -564,16 +564,16 @@ mod tests {
             4,
             4,
             vec![
-                -6., 1., 1., 6., -8., 5., 8., 6., -1., 0., 8., 2., -7., 1., -1., 1.,
+                -6., -8., -1., -7., 1., 5., 0., 1., 1., 8., 8., -1., 6., 6., 2., 1.,
             ],
         );
-        let expected = Matrix::from_vec(3, 3, vec![-6., 1., 6., -8., 8., 6., -7., -1., 1.]);
+        let expected = Matrix::from_vec(3, 3, vec![-6., -8., -7., 1., 8., -1., 6., 6., 1.]);
         assert_eq!(matrix.submatrix(1, 2), expected);
     }
 
     #[test]
     fn calculating_minor_of_3x3_matrix() {
-        let matrix = Matrix::from_vec(3, 3, vec![1., 5., 0., 2., -1., -7., 6., -1., 5.]);
+        let matrix = Matrix::from_vec(3, 3, vec![1., 2., 6., 5., -1., -1., 0., -7., 5.]);
         let submatrix = matrix.submatrix(0, 1);
         assert_eq!(submatrix.determinant(), 25.);
         assert_eq!(matrix.minor(0, 1), 25.);
@@ -581,7 +581,7 @@ mod tests {
 
     #[test]
     fn calculating_cofactor_of_3x3_matrix() {
-        let matrix = Matrix::from_vec(3, 3, vec![3., 5., 0., 2., -1., -7., 6., -1., 5.]);
+        let matrix = Matrix::from_vec(3, 3, vec![3., 2., 6., 5., -1., -1., 0., -7., 5.]);
         assert_eq!(matrix.minor(0, 0), -12.);
         assert_eq!(matrix.cofactor(0, 0), -12.);
         assert_eq!(matrix.minor(0, 1), 25.);
@@ -590,7 +590,7 @@ mod tests {
 
     #[test]
     fn calculating_determinant_of_3x3_matrix() {
-        let matrix = Matrix::from_vec(3, 3, vec![1., 2., 6., -5., 8., -4., 2., 6., 4.]);
+        let matrix = Matrix::from_vec(3, 3, vec![1., -5., 2., 2., 8., 6., 6., -4., 4.]);
         assert_eq!(matrix.cofactor(0, 0), 56.);
         assert_eq!(matrix.cofactor(1, 0), 12.);
         assert_eq!(matrix.cofactor(2, 0), -46.);
@@ -603,7 +603,7 @@ mod tests {
             4,
             4,
             vec![
-                -2., -8., 3., 5., -3., 1., 7., 3., 1., 2., -9., 6., -6., 7., 7., -9.,
+                -2., -3., 1., -6., -8., 1., 2., 7., 3., 7., -9., 7., 5., 3., 6., -9.,
             ],
         );
         assert_eq!(matrix.cofactor(0, 0), 690.);
@@ -619,7 +619,7 @@ mod tests {
             4,
             4,
             vec![
-                6., 4., 4., 4., 5., 5., 7., 6., 4., -9., 3., -7., 9., 1., 7., -6.,
+                6., 5., 4., 9., 4., 5., -9., 1., 4., 7., 3., 7., 4., 6., -7., -6.,
             ],
         );
         assert_eq!(matrix.determinant(), -2120.);
@@ -632,7 +632,7 @@ mod tests {
             4,
             4,
             vec![
-                -4., 2., -2., -3., 9., 6., 2., 6., 0., -5., 1., -5., 0., 0., 0., 0.,
+                -4., 9., 0., 0., 2., 6., -5., 0., -2., 2., 1., 0., -3., 6., -5., 0.,
             ],
         );
         assert_eq!(matrix.determinant(), 0.);
@@ -645,7 +645,7 @@ mod tests {
             4,
             4,
             vec![
-                -5., 2., 6., -8., 1., -5., 1., 8., 7., 7., -6., -7., 1., -3., 7., 4.,
+                -5., 1., 7., 1., 2., -5., 7., -3., 6., 1., -6., 7., -8., 8., -7., 4.,
             ],
         );
         let inv = matrix.inverse();
@@ -654,20 +654,20 @@ mod tests {
             4,
             vec![
                 116. / 532.,
-                240. / 532.,
-                128. / 532.,
-                -24. / 532.,
                 -430. / 532.,
-                -775. / 532.,
-                -236. / 532.,
-                277. / 532.,
                 -42. / 532.,
-                -119. / 532.,
-                -28. / 532.,
-                105. / 532.,
                 -278. / 532.,
+                240. / 532.,
+                -775. / 532.,
+                -119. / 532.,
                 -433. / 532.,
+                128. / 532.,
+                -236. / 532.,
+                -28. / 532.,
                 -160. / 532.,
+                -24. / 532.,
+                277. / 532.,
+                105. / 532.,
                 163. / 532.,
             ],
         );
@@ -685,7 +685,7 @@ mod tests {
             4,
             4,
             vec![
-                8., -5., 9., 2., 7., 5., 6., 1., -6., 0., 9., 6., -3., 0., -9., -4.,
+                8., 7., -6., -3., -5., 5., 0., 0., 9., 6., 9., -9., 2., 1., 6., -4.,
             ],
         );
         let expected = Matrix::from_vec(
@@ -693,20 +693,20 @@ mod tests {
             4,
             vec![
                 -90. / 585.,
-                -90. / 585.,
-                -165. / 585.,
-                -315. / 585.,
                 -45. / 585.,
+                210. / 585.,
+                -405. / 585.,
+                -90. / 585.,
                 72. / 585.,
+                210. / 585.,
+                -405. / 585.,
+                -165. / 585.,
                 15. / 585.,
-                18. / 585.,
-                210. / 585.,
-                210. / 585.,
                 255. / 585.,
-                540. / 585.,
-                -405. / 585.,
-                -405. / 585.,
                 -450. / 585.,
+                -315. / 585.,
+                18. / 585.,
+                540. / 585.,
                 -1125. / 585.,
             ],
         );
@@ -719,7 +719,7 @@ mod tests {
             4,
             4,
             vec![
-                9., 3., 0., 9., -5., -2., -6., -3., -4., 9., 6., 4., -7., 6., 6., 2.,
+                9., -5., -4., -7., 3., -2., 9., 6., 0., -6., 6., 6., 9., -3., 4., 2.,
             ],
         );
         let expected = Matrix::from_vec(
@@ -728,19 +728,19 @@ mod tests {
             vec![
                 -66. / 1620.,
                 -126. / 1620.,
-                234. / 1620.,
-                -360. / 1620.,
+                -47. / 1620.,
+                288. / 1620.,
                 -126. / 1620.,
                 54. / 1620.,
-                594. / 1620.,
-                -540. / 1620.,
-                -47. / 1620.,
                 -237. / 1620.,
-                -177. / 1620.,
-                210. / 1620.,
-                288. / 1620.,
                 108. / 1620.,
+                234. / 1620.,
+                594. / 1620.,
+                -177. / 1620.,
                 -432. / 1620.,
+                -360. / 1620.,
+                -540. / 1620.,
+                210. / 1620.,
                 540. / 1620.,
             ],
         );
@@ -753,14 +753,14 @@ mod tests {
             4,
             4,
             vec![
-                3., -9., 7., 3., 3., -8., 2., -9., -4., 4., 4., 1., -6., 5., -1., 1.,
+                3., 3., -4., -6., -9., -8., 4., 5., 7., 2., 4., -1., 3., -9., 1., 1.,
             ],
         );
         let matrix_b = Matrix::from_vec(
             4,
             4,
             vec![
-                8., 2., 2., 2., 3., -1., 7., 0., 7., 0., 5., 4., 6., -2., 0., 5.,
+                8., 3., 7., 6., 2., -1., 0., -2., 2., 7., 5., 0., 2., 0., 4., 5.,
             ],
         );
         let product = &matrix_a * &matrix_b;
@@ -992,14 +992,14 @@ mod tests {
     fn portrait_matrix() {
         let mut matrix = Matrix::new(2, 5, 0.);
         matrix.set(0, 0, 0.);
-        matrix.set(1, 0, 1.);
-        matrix.set(0, 1, 2.);
-        matrix.set(1, 1, 3.);
-        matrix.set(0, 2, 4.);
-        matrix.set(1, 2, 5.);
-        matrix.set(0, 3, 6.);
-        matrix.set(1, 3, 7.);
-        matrix.set(0, 4, 8.);
+        matrix.set(0, 1, 1.);
+        matrix.set(0, 2, 2.);
+        matrix.set(0, 3, 3.);
+        matrix.set(0, 4, 4.);
+        matrix.set(1, 0, 5.);
+        matrix.set(1, 1, 6.);
+        matrix.set(1, 2, 7.);
+        matrix.set(1, 3, 8.);
         matrix.set(1, 4, 9.);
         let expected = Matrix::from_vec(2, 5, vec![0., 1., 2., 3., 4., 5., 6., 7., 8., 9.]);
         assert_eq!(matrix, expected);
@@ -1009,14 +1009,14 @@ mod tests {
     fn landscape_matrix() {
         let mut matrix = Matrix::new(5, 2, 0.);
         matrix.set(0, 0, 0.);
-        matrix.set(1, 0, 1.);
-        matrix.set(2, 0, 2.);
-        matrix.set(3, 0, 3.);
-        matrix.set(4, 0, 4.);
-        matrix.set(0, 1, 5.);
-        matrix.set(1, 1, 6.);
-        matrix.set(2, 1, 7.);
-        matrix.set(3, 1, 8.);
+        matrix.set(0, 1, 1.);
+        matrix.set(1, 0, 2.);
+        matrix.set(1, 1, 3.);
+        matrix.set(2, 0, 4.);
+        matrix.set(2, 1, 5.);
+        matrix.set(3, 0, 6.);
+        matrix.set(3, 1, 7.);
+        matrix.set(4, 0, 8.);
         matrix.set(4, 1, 9.);
         let expected = Matrix::from_vec(5, 2, vec![0., 1., 2., 3., 4., 5., 6., 7., 8., 9.]);
         assert_eq!(matrix, expected);
