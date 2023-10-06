@@ -8,7 +8,10 @@ pub struct Light {
 
 impl Light {
     pub fn new(position: Tuple, intensity: Tuple) -> Light {
-        Light { intensity, position }
+        Light {
+            intensity,
+            position,
+        }
     }
 }
 
@@ -20,7 +23,10 @@ mod tests {
     fn point_light_has_position_and_intensity() {
         let intensity = Tuple::color(1.0, 1.0, 1.0);
         let position = Tuple::point(0.0, 0.0, 0.0);
-        let light = Light { intensity: intensity.clone(), position: position.clone() };
+        let light = Light {
+            intensity: intensity.clone(),
+            position: position.clone(),
+        };
         assert_eq!(light.intensity, intensity);
         assert_eq!(light.position, position);
     }

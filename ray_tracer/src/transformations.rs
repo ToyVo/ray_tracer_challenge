@@ -4,12 +4,28 @@ pub fn view_transform(from: Tuple, to: Tuple, up: Tuple) -> Matrix {
     let forward = (&to - &from).normalize();
     let left = forward.cross(&up.normalize());
     let true_up = left.cross(&forward);
-    let orientation = Matrix::from_vec(4, 4, vec![
-        left.x(), left.y(), left.z(), 0.,
-        true_up.x(), true_up.y(), true_up.z(), 0.,
-        -forward.x(), -forward.y(), -forward.z(), 0.,
-        0., 0., 0., 1.,
-    ]);
+    let orientation = Matrix::from_vec(
+        4,
+        4,
+        vec![
+            left.x(),
+            left.y(),
+            left.z(),
+            0.,
+            true_up.x(),
+            true_up.y(),
+            true_up.z(),
+            0.,
+            -forward.x(),
+            -forward.y(),
+            -forward.z(),
+            0.,
+            0.,
+            0.,
+            0.,
+            1.,
+        ],
+    );
     orientation * Matrix::translation(-from.x(), -from.y(), -from.z())
 }
 
@@ -51,11 +67,17 @@ mod tests {
         let to = Tuple::point(4., -2., 8.);
         let up = Tuple::vector(1., 1., 0.);
         let transform = view_transform(from, to, up);
-        assert_relative_eq!(transform, Matrix::from_vec(4, 4, vec![
-            -0.50709, 0.50709, 0.67612, -2.36643,
-            0.76772, 0.60609, 0.12122, -2.82843,
-            -0.35857, 0.59761, -0.71714, 0.,
-            0., 0., 0., 1.,
-        ]), epsilon = 1e-5f64);
+        assert_relative_eq!(
+            transform,
+            Matrix::from_vec(
+                4,
+                4,
+                vec![
+                    -0.50709, 0.50709, 0.67612, -2.36643, 0.76772, 0.60609, 0.12122, -2.82843,
+                    -0.35857, 0.59761, -0.71714, 0., 0., 0., 0., 1.,
+                ]
+            ),
+            epsilon = 1e-5f64
+        );
     }
 }

@@ -1,41 +1,41 @@
-use std::ops::Mul;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use std::ops::Mul;
 
 use crate::Tuple;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Matrix {
     data: Vec<f64>,
-    rows: usize,
     cols: usize,
+    rows: usize,
 }
 
 impl Matrix {
-    pub fn new(rows: usize, cols: usize, init: f64) -> Matrix {
-        let data = vec![init; rows * cols];
-        Matrix { data, rows, cols }
+    pub fn new(cols: usize, rows: usize, init: f64) -> Matrix {
+        let data = vec![init; cols * rows];
+        Matrix { data, cols, rows }
     }
 
-    pub fn from_vec(rows: usize, cols: usize, data: Vec<f64>) -> Matrix {
-        Matrix { data, rows, cols }
+    pub fn from_vec(cols: usize, rows: usize, data: Vec<f64>) -> Matrix {
+        Matrix { data, cols, rows }
     }
 
-    pub fn get(&self, row: usize, col: usize) -> f64 {
-        assert!(row < self.rows && col < self.cols);
-        self.data[row * self.cols + col]
+    pub fn get(&self, x: usize, y: usize) -> f64 {
+        assert!(x < self.cols && y < self.rows);
+        self.data[y * self.cols + x]
     }
 
-    pub fn set(&mut self, row: usize, col: usize, value: f64) {
-        assert!(row < self.rows && col < self.cols);
-        self.data[row * self.cols + col] = value;
-    }
-
-    pub fn rows(&self) -> usize {
-        self.rows
+    pub fn set(&mut self, x: usize, y: usize, value: f64) {
+        assert!(x < self.cols && y < self.rows);
+        self.data[y * self.cols + x] = value;
     }
 
     pub fn cols(&self) -> usize {
         self.cols
+    }
+
+    pub fn rows(&self) -> usize {
+        self.rows
     }
 
     pub fn width(&self) -> usize {
@@ -46,27 +46,27 @@ impl Matrix {
         self.rows
     }
 
-    pub fn get_row(&self, row: usize) -> Tuple {
-        assert!(row < self.rows);
-        let mut result = Tuple::new(self.cols, 0.);
-        for col in 0..self.cols {
-            result.set(col, self.get(row, col));
-        }
-        result
-    }
-
     pub fn get_col(&self, col: usize) -> Tuple {
         assert!(col < self.cols);
         let mut result = Tuple::new(self.rows, 0.);
         for row in 0..self.rows {
-            result.set(row, self.get(row, col));
+            result.set(row, self.get(col, row));
         }
         result
     }
 
-    pub fn identity(size: usize) -> Matrix {
-        let mut result = Matrix::new(size, size, 0.);
-        for i in 0..size {
+    pub fn get_row(&self, row: usize) -> Tuple {
+        assert!(row < self.rows);
+        let mut result = Tuple::new(self.cols, 0.);
+        for col in 0..self.cols {
+            result.set(col, self.get(col, row));
+        }
+        result
+    }
+
+    pub fn identity(dimension: usize) -> Matrix {
+        let mut result = Matrix::new(dimension, dimension, 0.);
+        for i in 0..dimension {
             result.set(i, i, 1.);
         }
         result
@@ -74,9 +74,9 @@ impl Matrix {
 
     pub fn translation(x: f64, y: f64, z: f64) -> Matrix {
         let mut result = Matrix::identity(4);
-        result.set(0, 3, x);
-        result.set(1, 3, y);
-        result.set(2, 3, z);
+        result.set(3, 0, x);
+        result.set(3, 1, y);
+        result.set(3, 2, z);
         result
     }
 
@@ -90,34 +90,34 @@ impl Matrix {
 
     pub fn shearing(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Matrix {
         let mut result = Matrix::identity(4);
-        result.set(0, 1, xy);
-        result.set(0, 2, xz);
-        result.set(1, 0, yx);
-        result.set(1, 2, yz);
-        result.set(2, 0, zx);
-        result.set(2, 1, zy);
+        result.set(1, 0, xy);
+        result.set(2, 0, xz);
+        result.set(0, 1, yx);
+        result.set(2, 1, yz);
+        result.set(0, 2, zx);
+        result.set(1, 2, zy);
         result
     }
 
     pub fn transpose(&self) -> Matrix {
-        let mut result = Matrix::new(self.cols, self.rows, 0.);
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                result.set(col, row, self.get(row, col));
+        let mut result = Matrix::new(self.rows, self.cols, 0.);
+        for col in 0..self.cols {
+            for row in 0..self.rows {
+                result.set(row, col, self.get(col, row));
             }
         }
         result
     }
 
-    pub fn submatrix(&self, row: usize, col: usize) -> Matrix {
-        assert_eq!(self.rows, self.cols);
-        let mut result = Matrix::new(self.rows - 1, self.cols - 1, 0.);
-        for i in 0..self.rows {
-            for j in 0..self.cols {
-                if i != row && j != col {
-                    let new_i = if i > row { i - 1 } else { i };
-                    let new_j = if j > col { j - 1 } else { j };
-                    result.set(new_i, new_j, self.get(i, j));
+    pub fn submatrix(&self, x: usize, y: usize) -> Matrix {
+        assert_eq!(self.cols, self.rows);
+        let mut result = Matrix::new(self.cols - 1, self.rows - 1, 0.);
+        for col in 0..self.cols {
+            for row in 0..self.rows {
+                if row != y && col != x {
+                    let new_x = if col > x { col - 1 } else { col };
+                    let new_y = if row > y { row - 1 } else { row };
+                    result.set(new_x, new_y, self.get(col, row));
                 }
             }
         }
@@ -137,13 +137,13 @@ impl Matrix {
     }
 
     pub fn determinant(&self) -> f64 {
-        assert_eq!(self.rows, self.cols);
+        assert_eq!(self.cols, self.rows);
         if self.cols == 2 {
-            self.get(0, 0) * self.get(1, 1) - self.get(0, 1) * self.get(1, 0)
+            self.get(0, 0) * self.get(1, 1) - self.get(1, 0) * self.get(0, 1)
         } else {
             let mut det = 0.;
             for col in 0..self.cols {
-                det = det + self.get(0, col) * self.cofactor(0, col);
+                det = det + self.get(col, 0) * self.cofactor(col, 0);
             }
             det
         }
@@ -153,13 +153,13 @@ impl Matrix {
         self.determinant() != 0.
     }
 
-    pub fn minor(&self, row: usize, col: usize) -> f64 {
-        self.submatrix(row, col).determinant()
+    pub fn minor(&self, x: usize, y: usize) -> f64 {
+        self.submatrix(x, y).determinant()
     }
 
-    pub fn cofactor(&self, row: usize, col: usize) -> f64 {
-        let minor = self.minor(row, col);
-        if (row + col) % 2 == 0 {
+    pub fn cofactor(&self, x: usize, y: usize) -> f64 {
+        let minor = self.minor(x, y);
+        if (y + x) % 2 == 0 {
             minor
         } else {
             -minor
@@ -167,53 +167,53 @@ impl Matrix {
     }
 
     pub fn inverse(&self) -> Matrix {
-        let mut result = Matrix::new(self.rows, self.cols, 0.);
+        let mut result = Matrix::new(self.cols, self.rows, 0.);
         let det = self.determinant();
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                result.set(col, row, self.cofactor(row, col) / det);
+        for col in 0..self.cols {
+            for row in 0..self.rows {
+                result.set(row, col, self.cofactor(col, row) / det);
             }
         }
         result
     }
 
-    pub fn rotation_x(rad: f64) -> Matrix {
+    pub fn rotation_x(radians: f64) -> Matrix {
         let mut result = Matrix::identity(4);
-        result.set(1, 1, f64::cos(rad));
-        result.set(1, 2, -f64::sin(rad));
-        result.set(2, 1, f64::sin(rad));
-        result.set(2, 2, f64::cos(rad));
+        result.set(1, 1, f64::cos(radians));
+        result.set(1, 2, f64::sin(radians));
+        result.set(2, 1, -f64::sin(radians));
+        result.set(2, 2, f64::cos(radians));
         result
     }
 
-    pub fn rotation_y(rad: f64) -> Matrix {
+    pub fn rotation_y(radians: f64) -> Matrix {
         let mut result = Matrix::identity(4);
-        result.set(0, 0, f64::cos(rad));
-        result.set(0, 2, f64::sin(rad));
-        result.set(2, 0, -f64::sin(rad));
-        result.set(2, 2, f64::cos(rad));
+        result.set(0, 0, f64::cos(radians));
+        result.set(0, 2, -f64::sin(radians));
+        result.set(2, 0, f64::sin(radians));
+        result.set(2, 2, f64::cos(radians));
         result
     }
 
-    pub fn rotation_z(rad: f64) -> Matrix {
+    pub fn rotation_z(radians: f64) -> Matrix {
         let mut result = Matrix::identity(4);
-        result.set(0, 0, f64::cos(rad));
-        result.set(0, 1, -f64::sin(rad));
-        result.set(1, 0, f64::sin(rad));
-        result.set(1, 1, f64::cos(rad));
+        result.set(0, 0, f64::cos(radians));
+        result.set(0, 1, f64::sin(radians));
+        result.set(1, 0, -f64::sin(radians));
+        result.set(1, 1, f64::cos(radians));
         result
     }
 
-    pub fn rotate_x(&self, rad: f64) -> Matrix {
-        Matrix::rotation_x(rad) * self
+    pub fn rotate_x(&self, radians: f64) -> Matrix {
+        Matrix::rotation_x(radians) * self
     }
 
-    pub fn rotate_y(&self, rad: f64) -> Matrix {
-        Matrix::rotation_y(rad) * self
+    pub fn rotate_y(&self, radians: f64) -> Matrix {
+        Matrix::rotation_y(radians) * self
     }
 
-    pub fn rotate_z(&self, rad: f64) -> Matrix {
-        Matrix::rotation_z(rad) * self
+    pub fn rotate_z(&self, radians: f64) -> Matrix {
+        Matrix::rotation_z(radians) * self
     }
 }
 
@@ -221,13 +221,13 @@ impl Mul<&Matrix> for &Matrix {
     type Output = Matrix;
 
     fn mul(self, other: &Matrix) -> Matrix {
-        assert_eq!(self.rows, other.cols);
-        let mut result = Matrix::new(other.rows, self.cols, 0.);
-        for row in 0..other.rows {
-            for col in 0..self.cols {
+        assert_eq!(self.cols, other.rows);
+        let mut result = Matrix::new(self.cols, other.rows, 0.);
+        for col in 0..self.cols {
+            for row in 0..other.rows {
                 let tuple_row = self.get_row(row);
                 let tuple_col = other.get_col(col);
-                result.set(row, col, tuple_col.dot(&tuple_row));
+                result.set(col, row, tuple_col.dot(&tuple_row));
             }
         }
         result
@@ -309,7 +309,7 @@ impl AbsDiffEq for Matrix {
         }
         for x in 0..self.cols {
             for y in 0..self.rows {
-                if !self.get(x, y).abs_diff_eq(&other.get(x, y), epsilon) {
+                if !self.get(y, x).abs_diff_eq(&other.get(y, x), epsilon) {
                     return false;
                 }
             }
@@ -323,18 +323,16 @@ impl RelativeEq for Matrix {
         f64::default_max_relative()
     }
 
-    fn relative_eq(
-        &self,
-        other: &Matrix,
-        epsilon: f64,
-        max_relative: f64,
-    ) -> bool {
+    fn relative_eq(&self, other: &Matrix, epsilon: f64, max_relative: f64) -> bool {
         if self.cols != other.cols || self.rows != other.rows {
             return false;
         }
         for x in 0..self.cols {
             for y in 0..self.rows {
-                if !self.get(x, y).relative_eq(&other.get(x, y), epsilon, max_relative) {
+                if !self
+                    .get(y, x)
+                    .relative_eq(&other.get(y, x), epsilon, max_relative)
+                {
                     return false;
                 }
             }
@@ -354,7 +352,7 @@ impl UlpsEq for Matrix {
         }
         for x in 0..self.cols {
             for y in 0..self.rows {
-                if !self.get(x, y).ulps_eq(&other.get(x, y), epsilon, max_ulps) {
+                if !self.get(y, x).ulps_eq(&other.get(y, x), epsilon, max_ulps) {
                     return false;
                 }
             }
@@ -365,9 +363,9 @@ impl UlpsEq for Matrix {
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_relative_eq;
     use std::f64::consts::PI;
     use std::f64::consts::SQRT_2;
-    use approx::assert_relative_eq;
 
     use super::*;
 
@@ -381,20 +379,20 @@ mod tests {
             ],
         );
         assert_eq!(matrix.get(0, 0), 1.);
-        assert_eq!(matrix.get(0, 3), 4.);
-        assert_eq!(matrix.get(1, 0), 5.5);
-        assert_eq!(matrix.get(1, 2), 7.5);
+        assert_eq!(matrix.get(3, 0), 4.);
+        assert_eq!(matrix.get(0, 1), 5.5);
+        assert_eq!(matrix.get(2, 1), 7.5);
         assert_eq!(matrix.get(2, 2), 11.);
-        assert_eq!(matrix.get(3, 0), 13.5);
-        assert_eq!(matrix.get(3, 2), 15.5);
+        assert_eq!(matrix.get(0, 3), 13.5);
+        assert_eq!(matrix.get(2, 3), 15.5);
     }
 
     #[test]
     fn constructing_2x2_matrix() {
         let matrix = Matrix::from_vec(2, 2, vec![-3., 5., 1., -2.]);
         assert_eq!(matrix.get(0, 0), -3.);
-        assert_eq!(matrix.get(0, 1), 5.);
-        assert_eq!(matrix.get(1, 0), 1.);
+        assert_eq!(matrix.get(1, 0), 5.);
+        assert_eq!(matrix.get(0, 1), 1.);
         assert_eq!(matrix.get(1, 1), -2.);
     }
 
@@ -557,7 +555,7 @@ mod tests {
     fn submatrix_of_3x3_is_2x2() {
         let matrix = Matrix::from_vec(3, 3, vec![1., 5., 0., -3., 2., 7., 0., 6., -3.]);
         let expected = Matrix::from_vec(2, 2, vec![-3., 2., 0., 6.]);
-        assert_eq!(matrix.submatrix(0, 2), expected);
+        assert_eq!(matrix.submatrix(2, 0), expected);
     }
 
     #[test]
@@ -570,15 +568,15 @@ mod tests {
             ],
         );
         let expected = Matrix::from_vec(3, 3, vec![-6., 1., 6., -8., 8., 6., -7., -1., 1.]);
-        assert_eq!(matrix.submatrix(2, 1), expected);
+        assert_eq!(matrix.submatrix(1, 2), expected);
     }
 
     #[test]
     fn calculating_minor_of_3x3_matrix() {
         let matrix = Matrix::from_vec(3, 3, vec![1., 5., 0., 2., -1., -7., 6., -1., 5.]);
-        let submatrix = matrix.submatrix(1, 0);
+        let submatrix = matrix.submatrix(0, 1);
         assert_eq!(submatrix.determinant(), 25.);
-        assert_eq!(matrix.minor(1, 0), 25.);
+        assert_eq!(matrix.minor(0, 1), 25.);
     }
 
     #[test]
@@ -586,16 +584,16 @@ mod tests {
         let matrix = Matrix::from_vec(3, 3, vec![3., 5., 0., 2., -1., -7., 6., -1., 5.]);
         assert_eq!(matrix.minor(0, 0), -12.);
         assert_eq!(matrix.cofactor(0, 0), -12.);
-        assert_eq!(matrix.minor(1, 0), 25.);
-        assert_eq!(matrix.cofactor(1, 0), -25.);
+        assert_eq!(matrix.minor(0, 1), 25.);
+        assert_eq!(matrix.cofactor(0, 1), -25.);
     }
 
     #[test]
     fn calculating_determinant_of_3x3_matrix() {
         let matrix = Matrix::from_vec(3, 3, vec![1., 2., 6., -5., 8., -4., 2., 6., 4.]);
         assert_eq!(matrix.cofactor(0, 0), 56.);
-        assert_eq!(matrix.cofactor(0, 1), 12.);
-        assert_eq!(matrix.cofactor(0, 2), -46.);
+        assert_eq!(matrix.cofactor(1, 0), 12.);
+        assert_eq!(matrix.cofactor(2, 0), -46.);
         assert_eq!(matrix.determinant(), -196.);
     }
 
@@ -609,9 +607,9 @@ mod tests {
             ],
         );
         assert_eq!(matrix.cofactor(0, 0), 690.);
-        assert_eq!(matrix.cofactor(0, 1), 447.);
-        assert_eq!(matrix.cofactor(0, 2), 210.);
-        assert_eq!(matrix.cofactor(0, 3), 51.);
+        assert_eq!(matrix.cofactor(1, 0), 447.);
+        assert_eq!(matrix.cofactor(2, 0), 210.);
+        assert_eq!(matrix.cofactor(3, 0), 51.);
         assert_eq!(matrix.determinant(), -4071.);
     }
 
@@ -674,10 +672,10 @@ mod tests {
             ],
         );
         assert_eq!(matrix.determinant(), 532.);
-        assert_eq!(matrix.cofactor(2, 3), -160.);
-        assert_eq!(inv.get(3, 2), -160. / 532.);
-        assert_eq!(matrix.cofactor(3, 2), 105.);
-        assert_eq!(inv.get(2, 3), 105. / 532.);
+        assert_eq!(matrix.cofactor(3, 2), -160.);
+        assert_eq!(inv.get(2, 3), -160. / 532.);
+        assert_eq!(matrix.cofactor(2, 3), 105.);
+        assert_eq!(inv.get(3, 2), 105. / 532.);
         assert_eq!(inv, expected);
     }
 
@@ -992,35 +990,35 @@ mod tests {
 
     #[test]
     fn portrait_matrix() {
-        let mut matrix = Matrix::new(5, 2, 0.);
+        let mut matrix = Matrix::new(2, 5, 0.);
         matrix.set(0, 0, 0.);
-        matrix.set(0, 1, 1.);
-        matrix.set(1, 0, 2.);
+        matrix.set(1, 0, 1.);
+        matrix.set(0, 1, 2.);
         matrix.set(1, 1, 3.);
-        matrix.set(2, 0, 4.);
-        matrix.set(2, 1, 5.);
-        matrix.set(3, 0, 6.);
-        matrix.set(3, 1, 7.);
-        matrix.set(4, 0, 8.);
-        matrix.set(4, 1, 9.);
-        let expected = Matrix::from_vec(5, 2, vec![0., 1., 2., 3., 4., 5., 6., 7., 8., 9.]);
+        matrix.set(0, 2, 4.);
+        matrix.set(1, 2, 5.);
+        matrix.set(0, 3, 6.);
+        matrix.set(1, 3, 7.);
+        matrix.set(0, 4, 8.);
+        matrix.set(1, 4, 9.);
+        let expected = Matrix::from_vec(2, 5, vec![0., 1., 2., 3., 4., 5., 6., 7., 8., 9.]);
         assert_eq!(matrix, expected);
     }
 
     #[test]
     fn landscape_matrix() {
-        let mut matrix = Matrix::new(2, 5, 0.);
+        let mut matrix = Matrix::new(5, 2, 0.);
         matrix.set(0, 0, 0.);
-        matrix.set(0, 1, 1.);
-        matrix.set(0, 2, 2.);
-        matrix.set(0, 3, 3.);
-        matrix.set(0, 4, 4.);
-        matrix.set(1, 0, 5.);
+        matrix.set(1, 0, 1.);
+        matrix.set(2, 0, 2.);
+        matrix.set(3, 0, 3.);
+        matrix.set(4, 0, 4.);
+        matrix.set(0, 1, 5.);
         matrix.set(1, 1, 6.);
-        matrix.set(1, 2, 7.);
-        matrix.set(1, 3, 8.);
-        matrix.set(1, 4, 9.);
-        let expected = Matrix::from_vec(2, 5, vec![0., 1., 2., 3., 4., 5., 6., 7., 8., 9.]);
+        matrix.set(2, 1, 7.);
+        matrix.set(3, 1, 8.);
+        matrix.set(4, 1, 9.);
+        let expected = Matrix::from_vec(5, 2, vec![0., 1., 2., 3., 4., 5., 6., 7., 8., 9.]);
         assert_eq!(matrix, expected);
     }
 }

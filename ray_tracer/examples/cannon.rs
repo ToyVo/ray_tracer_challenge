@@ -29,7 +29,7 @@ fn main() {
     let width = 900;
     let height = 550;
     let mut ticks = 0;
-    let mut canvas = Canvas::new(height, width, Tuple::color(0.0, 0.0, 0.0));
+    let mut canvas = Canvas::new(width, height, Tuple::color(0.0, 0.0, 0.0));
 
     loop {
         proj = tick(&env, &proj);

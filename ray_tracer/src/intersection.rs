@@ -135,8 +135,8 @@ impl Computations {
 #[cfg(test)]
 mod tests {
     use crate::{Matrix, Plane, Ray, Sphere, Transform, Tuple};
-    use std::f64::consts::SQRT_2;
     use approx::assert_relative_eq;
+    use std::f64::consts::SQRT_2;
 
     use super::*;
 
@@ -298,10 +298,7 @@ mod tests {
     #[test]
     fn schlick_approximation_under_total_reflection() {
         let shape = Box::new(Sphere::glass(0));
-        let ray = Ray::new(
-            Tuple::point(0., 0., SQRT_2 / 2.),
-            Tuple::vector(0., 1., 0.),
-        );
+        let ray = Ray::new(Tuple::point(0., 0., SQRT_2 / 2.), Tuple::vector(0., 1., 0.));
         let intersections = vec![
             Intersection::new(-SQRT_2 / 2., shape.clone()),
             Intersection::new(SQRT_2 / 2., shape),
@@ -327,10 +324,7 @@ mod tests {
     #[test]
     fn schlick_approximation_with_small_angle_and_n2_greater_than_n1() {
         let shape = Box::new(Sphere::glass(0));
-        let ray = Ray::new(
-            Tuple::point(0., 0.99, -2.),
-            Tuple::vector(0., 0., 1.),
-        );
+        let ray = Ray::new(Tuple::point(0., 0.99, -2.), Tuple::vector(0., 0., 1.));
         let intersections = vec![Intersection::new(1.8589, shape)];
         let comps = intersections[0].prepare_computations(&ray, Some(&intersections));
         let reflectance = comps.schlick();

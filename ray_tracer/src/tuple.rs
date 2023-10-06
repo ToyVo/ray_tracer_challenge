@@ -56,7 +56,13 @@ impl Tuple {
     }
 
     pub fn to_vector(&self) -> Tuple {
-        Tuple::from_vec(self.data.iter().enumerate().map(|(i, &v)| if i == self.data.len() - 1 { 0. } else { v }).collect())
+        Tuple::from_vec(
+            self.data
+                .iter()
+                .enumerate()
+                .map(|(i, &v)| if i == self.data.len() - 1 { 0. } else { v })
+                .collect(),
+        )
     }
 
     pub fn dimension(&self) -> usize {
@@ -357,8 +363,8 @@ impl UlpsEq for Tuple {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn tuple_with_w_1_is_point() {

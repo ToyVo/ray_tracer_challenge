@@ -1,4 +1,4 @@
-use crate::{Light, Tuple, Pattern, SolidPattern, Shape};
+use crate::{Light, Pattern, Shape, SolidPattern, Tuple};
 
 #[derive(Debug, Clone)]
 pub struct Material {
@@ -14,11 +14,11 @@ pub struct Material {
 
 impl PartialEq for Material {
     fn eq(&self, other: &Self) -> bool {
-        self.pattern.colors() == other.pattern.colors() &&
-        self.ambient == other.ambient &&
-        self.diffuse == other.diffuse &&
-        self.specular == other.specular &&
-        self.shininess == other.shininess
+        self.pattern.colors() == other.pattern.colors()
+            && self.ambient == other.ambient
+            && self.diffuse == other.diffuse
+            && self.specular == other.specular
+            && self.shininess == other.shininess
     }
 }
 
@@ -36,7 +36,15 @@ impl Material {
         }
     }
 
-    pub fn lighting(&self, object: &dyn Shape, light: &Light, point: &Tuple, eye_vector: &Tuple, normal_vector: &Tuple, in_shadow: bool) -> Tuple {
+    pub fn lighting(
+        &self,
+        object: &dyn Shape,
+        light: &Light,
+        point: &Tuple,
+        eye_vector: &Tuple,
+        normal_vector: &Tuple,
+        in_shadow: bool,
+    ) -> Tuple {
         let effective_color = self.pattern.pattern_at_object(object, point) * &light.intensity;
         let ambient = &effective_color * self.ambient;
         if in_shadow {
@@ -68,7 +76,7 @@ mod tests {
 
     use super::*;
 
-    use crate::{StripePattern, Sphere};
+    use crate::{Sphere, StripePattern};
     use approx::assert_relative_eq;
 
     #[test]
@@ -88,7 +96,14 @@ mod tests {
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
-        let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
+        let result = material.lighting(
+            &shape,
+            &light,
+            &position,
+            &eye_vector,
+            &normal_vector,
+            false,
+        );
         assert_eq!(result, Tuple::color(1.9, 1.9, 1.9));
     }
 
@@ -100,7 +115,14 @@ mod tests {
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
-        let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
+        let result = material.lighting(
+            &shape,
+            &light,
+            &position,
+            &eye_vector,
+            &normal_vector,
+            false,
+        );
         assert_eq!(result, Tuple::color(1.0, 1.0, 1.0));
     }
 
@@ -112,8 +134,23 @@ mod tests {
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
-        let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
-        assert_relative_eq!(result, Tuple::color(0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1), epsilon = 1e-5f64);
+        let result = material.lighting(
+            &shape,
+            &light,
+            &position,
+            &eye_vector,
+            &normal_vector,
+            false,
+        );
+        assert_relative_eq!(
+            result,
+            Tuple::color(
+                0.9 * SQRT_2 / 2. + 0.1,
+                0.9 * SQRT_2 / 2. + 0.1,
+                0.9 * SQRT_2 / 2. + 0.1
+            ),
+            epsilon = 1e-5f64
+        );
     }
 
     #[test]
@@ -124,8 +161,22 @@ mod tests {
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
-        let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
-        assert_eq!(result, Tuple::color(0.9 * SQRT_2 / 2. + 1., 0.9 * SQRT_2 / 2. + 1., 0.9 * SQRT_2 / 2. + 1.));
+        let result = material.lighting(
+            &shape,
+            &light,
+            &position,
+            &eye_vector,
+            &normal_vector,
+            false,
+        );
+        assert_eq!(
+            result,
+            Tuple::color(
+                0.9 * SQRT_2 / 2. + 1.,
+                0.9 * SQRT_2 / 2. + 1.,
+                0.9 * SQRT_2 / 2. + 1.
+            )
+        );
     }
 
     #[test]
@@ -136,7 +187,14 @@ mod tests {
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, 10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
-        let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
+        let result = material.lighting(
+            &shape,
+            &light,
+            &position,
+            &eye_vector,
+            &normal_vector,
+            false,
+        );
         assert_eq!(result, Tuple::color(0.1, 0.1, 0.1));
     }
 
@@ -148,14 +206,18 @@ mod tests {
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
-        let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, true);
+        let result =
+            material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, true);
         assert_eq!(result, Tuple::color(0.1, 0.1, 0.1));
     }
 
     #[test]
     fn lighting_with_pattern_applied() {
         let mut material = Material::new();
-        material.pattern = Box::new(StripePattern::new(Box::new(SolidPattern::new(Tuple::color(1.0, 1.0, 1.0))), Box::new(SolidPattern::new(Tuple::color(0.0, 0.0, 0.0)))));
+        material.pattern = Box::new(StripePattern::new(
+            Box::new(SolidPattern::new(Tuple::color(1.0, 1.0, 1.0))),
+            Box::new(SolidPattern::new(Tuple::color(0.0, 0.0, 0.0))),
+        ));
         material.ambient = 1.0;
         material.diffuse = 0.0;
         material.specular = 0.0;
@@ -163,8 +225,22 @@ mod tests {
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
         let light = Light::new(Tuple::point(0.0, 0.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
-        let color_a = material.lighting(&shape, &light, &Tuple::point(0.9, 0.0, 0.0), &eye_vector, &normal_vector, false);
-        let color_b = material.lighting(&shape, &light, &Tuple::point(1.1, 0.0, 0.0), &eye_vector, &normal_vector, false);
+        let color_a = material.lighting(
+            &shape,
+            &light,
+            &Tuple::point(0.9, 0.0, 0.0),
+            &eye_vector,
+            &normal_vector,
+            false,
+        );
+        let color_b = material.lighting(
+            &shape,
+            &light,
+            &Tuple::point(1.1, 0.0, 0.0),
+            &eye_vector,
+            &normal_vector,
+            false,
+        );
         assert_eq!(color_a, Tuple::color(1.0, 1.0, 1.0));
         assert_eq!(color_b, Tuple::color(0.0, 0.0, 0.0));
     }

@@ -134,7 +134,10 @@ mod tests {
     #[test]
     fn ray_intersects_cone_a() {
         let cone = Cone::new(0);
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0).normalize());
+        let ray = Ray::new(
+            Tuple::point(0.0, 0.0, -5.0),
+            Tuple::vector(0.0, 0.0, 1.0).normalize(),
+        );
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 5.0);
@@ -144,7 +147,10 @@ mod tests {
     #[test]
     fn ray_intersects_cone_b() {
         let cone = Cone::new(0);
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(1.0, 1.0, 1.0).normalize());
+        let ray = Ray::new(
+            Tuple::point(0.0, 0.0, -5.0),
+            Tuple::vector(1.0, 1.0, 1.0).normalize(),
+        );
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_relative_eq!(intersections[0].t, 8.66025, epsilon = 1e-5f64);
@@ -154,7 +160,10 @@ mod tests {
     #[test]
     fn ray_intersects_cone_c() {
         let cone = Cone::new(0);
-        let ray = Ray::new(Tuple::point(1.0, 1.0, -5.0), Tuple::vector(-0.5, -1.0, 1.0).normalize());
+        let ray = Ray::new(
+            Tuple::point(1.0, 1.0, -5.0),
+            Tuple::vector(-0.5, -1.0, 1.0).normalize(),
+        );
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_relative_eq!(intersections[0].t, 4.55006, epsilon = 1e-5f64);
@@ -164,7 +173,10 @@ mod tests {
     #[test]
     fn ray_intersects_cone_parallel() {
         let cone = Cone::new(0);
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -1.0), Tuple::vector(0.0, 1.0, 1.0).normalize());
+        let ray = Ray::new(
+            Tuple::point(0.0, 0.0, -1.0),
+            Tuple::vector(0.0, 1.0, 1.0).normalize(),
+        );
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
         assert_relative_eq!(intersections[0].t, 0.35355, epsilon = 1e-5f64);
@@ -176,7 +188,10 @@ mod tests {
         cone.minimum = -0.5;
         cone.maximum = 0.5;
         cone.closed = true;
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 1.0, 0.0).normalize());
+        let ray = Ray::new(
+            Tuple::point(0.0, 0.0, -5.0),
+            Tuple::vector(0.0, 1.0, 0.0).normalize(),
+        );
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -187,7 +202,10 @@ mod tests {
         cone.minimum = -0.5;
         cone.maximum = 0.5;
         cone.closed = true;
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -0.25), Tuple::vector(0.0, 1.0, 1.0).normalize());
+        let ray = Ray::new(
+            Tuple::point(0.0, 0.0, -0.25),
+            Tuple::vector(0.0, 1.0, 1.0).normalize(),
+        );
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
     }
@@ -198,7 +216,10 @@ mod tests {
         cone.minimum = -0.5;
         cone.maximum = 0.5;
         cone.closed = true;
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -0.25), Tuple::vector(0.0, 1.0, 0.0).normalize());
+        let ray = Ray::new(
+            Tuple::point(0.0, 0.0, -0.25),
+            Tuple::vector(0.0, 1.0, 0.0).normalize(),
+        );
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 4);
     }

@@ -1,4 +1,4 @@
-use crate::{Shape, Material, Matrix, Tuple, Ray, Intersection, Transform};
+use crate::{Intersection, Material, Matrix, Ray, Shape, Transform, Tuple};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plane {
@@ -73,7 +73,7 @@ mod tests {
     }
 
     #[test]
-        fn intersect_with_coplanar_ray() {
+    fn intersect_with_coplanar_ray() {
         let plane = Plane::new(0);
         let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
         let xs = plane.local_intersect(&ray);

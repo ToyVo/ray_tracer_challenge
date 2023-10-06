@@ -1,5 +1,6 @@
 use crate::{
-    Computations, Intersection, Light, Matrix, Ray, Shape, SolidPattern, Sphere, Transform, Tuple, Counter,
+    Computations, Counter, Intersection, Light, Matrix, Ray, Shape, SolidPattern, Sphere,
+    Transform, Tuple,
 };
 
 pub struct World {
@@ -61,7 +62,9 @@ impl World {
                 );
                 let reflected = self.reflected_color(comps, remaining);
                 let refracted = self.refracted_color(comps, remaining);
-                if comps.object.material().reflective > 0.0 && comps.object.material().transparency > 0.0 {
+                if comps.object.material().reflective > 0.0
+                    && comps.object.material().transparency > 0.0
+                {
                     let reflectance = comps.schlick();
                     sum + surface + reflected * reflectance + refracted * (1.0 - reflectance)
                 } else {
@@ -114,7 +117,8 @@ impl World {
             return Tuple::color(0., 0., 0.);
         }
         let cos_t = (1.0 - sin2_t).sqrt();
-        let direction = &comps.normal_vector * (n_ratio * cos_i - cos_t) - &comps.eye_vector * n_ratio;
+        let direction =
+            &comps.normal_vector * (n_ratio * cos_i - cos_t) - &comps.eye_vector * n_ratio;
         let refract_ray = Ray::new(comps.under_point.clone(), direction);
         self.color_at(&refract_ray, remaining - 1) * comps.object.material().transparency
     }
@@ -124,8 +128,8 @@ impl World {
 mod tests {
     use super::*;
     use crate::{Material, Plane, TestPattern};
-    use std::f64::consts::SQRT_2;
     use approx::assert_relative_eq;
+    use std::f64::consts::SQRT_2;
 
     #[test]
     fn creating_world() {
@@ -173,7 +177,11 @@ mod tests {
         let intersection = Intersection::new(4., shape);
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.shade_hit(&comps, 5);
-        assert_relative_eq!(color, Tuple::color(0.38066, 0.47583, 0.2855), epsilon = 1e-5f64);
+        assert_relative_eq!(
+            color,
+            Tuple::color(0.38066, 0.47583, 0.2855),
+            epsilon = 1e-5f64
+        );
     }
 
     #[test]
@@ -188,7 +196,11 @@ mod tests {
         let intersection = Intersection::new(0.5, shape);
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.shade_hit(&comps, 5);
-        assert_relative_eq!(color, Tuple::color(0.90498, 0.90498, 0.90498), epsilon = 1e-5f64);
+        assert_relative_eq!(
+            color,
+            Tuple::color(0.90498, 0.90498, 0.90498),
+            epsilon = 1e-5f64
+        );
     }
 
     #[test]
@@ -204,7 +216,11 @@ mod tests {
         let world = World::default();
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
         let color = world.color_at(&ray, 5);
-        assert_relative_eq!(color, Tuple::color(0.38066, 0.47583, 0.2855), epsilon = 1e-5f64);
+        assert_relative_eq!(
+            color,
+            Tuple::color(0.38066, 0.47583, 0.2855),
+            epsilon = 1e-5f64
+        );
     }
 
     #[test]
@@ -289,7 +305,11 @@ mod tests {
         let intersection = Intersection::new(SQRT_2, shape);
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.reflected_color(&comps, 5);
-        assert_relative_eq!(color, Tuple::color(0.19032, 0.2379, 0.14274), epsilon = 1e-4f64);
+        assert_relative_eq!(
+            color,
+            Tuple::color(0.19032, 0.2379, 0.14274),
+            epsilon = 1e-4f64
+        );
     }
 
     #[test]
@@ -307,7 +327,11 @@ mod tests {
         let intersection = Intersection::new(SQRT_2, shape);
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.shade_hit(&comps, 5);
-        assert_relative_eq!(color, Tuple::color(0.87677, 0.92436, 0.82918), epsilon = 1e-4f64);
+        assert_relative_eq!(
+            color,
+            Tuple::color(0.87677, 0.92436, 0.82918),
+            epsilon = 1e-4f64
+        );
     }
 
     #[test]
@@ -425,13 +449,18 @@ mod tests {
         ball.material_mut().ambient = 0.5;
         *ball.transform_mut() = Matrix::translation(0., -3.5, -0.5);
         world.objects.push(ball);
-        let ray = Ray::new(Tuple::point(0., 0., -3.), Tuple::vector(0., -SQRT_2 / 2., SQRT_2 / 2.));
-        let intersections = vec![
-            Intersection::new(SQRT_2, floor),
-        ];
+        let ray = Ray::new(
+            Tuple::point(0., 0., -3.),
+            Tuple::vector(0., -SQRT_2 / 2., SQRT_2 / 2.),
+        );
+        let intersections = vec![Intersection::new(SQRT_2, floor)];
         let comps = intersections[0].prepare_computations(&ray, Some(&intersections));
         let color = world.shade_hit(&comps, 5);
-        assert_relative_eq!(color, Tuple::color(0.93642, 0.68642, 0.68642), epsilon = 1e-5f64);
+        assert_relative_eq!(
+            color,
+            Tuple::color(0.93642, 0.68642, 0.68642),
+            epsilon = 1e-5f64
+        );
     }
 
     #[test]
@@ -448,12 +477,17 @@ mod tests {
         ball.material_mut().ambient = 0.5;
         *ball.transform_mut() = Matrix::translation(0., -3.5, -0.5);
         world.objects.push(ball);
-        let ray = Ray::new(Tuple::point(0., 0., -3.), Tuple::vector(0., -SQRT_2 / 2., SQRT_2 / 2.));
-        let intersections = vec![
-            Intersection::new(SQRT_2, floor),
-        ];
+        let ray = Ray::new(
+            Tuple::point(0., 0., -3.),
+            Tuple::vector(0., -SQRT_2 / 2., SQRT_2 / 2.),
+        );
+        let intersections = vec![Intersection::new(SQRT_2, floor)];
         let comps = intersections[0].prepare_computations(&ray, Some(&intersections));
         let color = world.shade_hit(&comps, 5);
-        assert_relative_eq!(color, Tuple::color(0.93391, 0.69643, 0.69243), epsilon = 1e-5f64);
+        assert_relative_eq!(
+            color,
+            Tuple::color(0.93391, 0.69643, 0.69243),
+            epsilon = 1e-5f64
+        );
     }
 }

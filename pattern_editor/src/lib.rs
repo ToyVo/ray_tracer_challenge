@@ -1,9 +1,8 @@
 use std::f64::consts::PI;
 
 use ray_tracer::{
-    view_transform, BlendedPattern, Camera, Canvas, Light, Matrix,
-    PerturbedPattern, Plane, RingPattern, Shape, SolidPattern, Sphere, StripePattern, Transform,
-    Tuple, World,
+    view_transform, BlendedPattern, Camera, Canvas, Light, Matrix, PerturbedPattern, Plane,
+    RingPattern, Shape, SolidPattern, Sphere, StripePattern, Transform, Tuple, World,
 };
 use wasm_bindgen::prelude::*;
 

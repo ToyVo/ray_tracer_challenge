@@ -1,4 +1,4 @@
-use crate::{Intersection, Material, Matrix, Ray, Tuple, Shape, Transform};
+use crate::{Intersection, Material, Matrix, Ray, Shape, Transform, Tuple};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Sphere {
@@ -38,7 +38,10 @@ impl Shape for Sphere {
         } else {
             let t1 = (-b - discriminant.sqrt()) / (2.0 * a);
             let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
-            vec![Intersection::new(t1, shape.clone()), Intersection::new(t2, shape)]
+            vec![
+                Intersection::new(t1, shape.clone()),
+                Intersection::new(t2, shape),
+            ]
         }
     }
     fn local_normal_at(&self, point: &Tuple) -> Tuple {
@@ -66,8 +69,8 @@ impl Transform for Sphere {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
     use approx::assert_relative_eq;
+    use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
 
     use super::*;
 
@@ -217,19 +220,23 @@ mod tests {
         let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::translation(0.0, 1.0, 0.0);
         let normal = shape.normal_at(&Tuple::point(0.0, FRAC_1_SQRT_2 + 1., -FRAC_1_SQRT_2));
-        assert_relative_eq!(normal, Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2), epsilon = 1e-5f64);
+        assert_relative_eq!(
+            normal,
+            Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
+            epsilon = 1e-5f64
+        );
     }
 
     #[test]
     fn normal_on_transformed_sphere() {
         let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::scaling(1.0, 0.5, 1.0) * Matrix::rotation_z(PI / 5.0);
-        let normal = shape.normal_at(&Tuple::point(
-            0.0,
-            SQRT_2 / 2.0,
-            -SQRT_2 / 2.0,
-        ));
-        assert_relative_eq!(normal, Tuple::vector(0.0, 0.97014, -0.24254), epsilon = 1e-5f64);
+        let normal = shape.normal_at(&Tuple::point(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0));
+        assert_relative_eq!(
+            normal,
+            Tuple::vector(0.0, 0.97014, -0.24254),
+            epsilon = 1e-5f64
+        );
     }
 
     #[test]

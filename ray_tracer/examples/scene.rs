@@ -1,8 +1,8 @@
 use std::f64::consts::PI;
 
 use ray_tracer::{
-    view_transform, BlendedPattern, Camera, CheckeredPattern, Light, Matrix, Plane, Shape,
-    SolidPattern, Sphere, StripePattern, Tuple, World, Transform, PerturbedPattern
+    view_transform, BlendedPattern, Camera, CheckeredPattern, Light, Matrix, PerturbedPattern,
+    Plane, Shape, SolidPattern, Sphere, StripePattern, Transform, Tuple, World,
 };
 
 fn main() {
@@ -20,7 +20,10 @@ fn main() {
 
     let mut floor = Plane::new(world.counter.next());
     *floor.transform_mut() = Matrix::scaling(10., 0.01, 10.);
-    floor.material_mut().pattern = Box::new(PerturbedPattern::new(Box::new(BlendedPattern::new(Box::new(s1), Box::new(s2)))));
+    floor.material_mut().pattern = Box::new(PerturbedPattern::new(Box::new(BlendedPattern::new(
+        Box::new(s1),
+        Box::new(s2),
+    ))));
     floor.material_mut().specular = 0.;
 
     let mut middle = Sphere::new(world.counter.next());

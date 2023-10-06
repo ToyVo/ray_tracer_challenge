@@ -2,36 +2,36 @@ use crate::Tuple;
 
 pub struct Canvas {
     data: Vec<Tuple>,
-    rows: usize,
     cols: usize,
+    rows: usize,
 }
 
 impl Canvas {
-    pub fn new(rows: usize, cols: usize, init: Tuple) -> Canvas {
-        let data = vec![init; rows * cols];
-        Canvas { data, rows, cols }
+    pub fn new(cols: usize, rows: usize, init: Tuple) -> Canvas {
+        let data = vec![init; cols * rows];
+        Canvas { data, cols, rows }
     }
 
-    pub fn from_vec(rows: usize, cols: usize, data: Vec<Tuple>) -> Canvas {
-        Canvas { data, rows, cols }
+    pub fn from_vec(cols: usize, rows: usize, data: Vec<Tuple>) -> Canvas {
+        Canvas { data, cols, rows }
     }
 
     pub fn pixel_at(&self, x: usize, y: usize) -> &Tuple {
-        assert!(y < self.rows && x < self.cols);
+        assert!(x < self.cols && y < self.rows);
         &self.data[y * self.cols + x]
     }
 
     pub fn write_pixel(&mut self, x: usize, y: usize, value: Tuple) {
-        assert!(y < self.rows && x < self.cols);
+        assert!(x < self.cols && y < self.rows);
         self.data[y * self.cols + x] = value;
-    }
-
-    pub fn rows(&self) -> usize {
-        self.rows
     }
 
     pub fn cols(&self) -> usize {
         self.cols
+    }
+
+    pub fn rows(&self) -> usize {
+        self.rows
     }
 
     pub fn width(&self) -> usize {
@@ -52,8 +52,8 @@ impl Canvas {
 
     pub fn to_buffer(&self) -> Vec<u8> {
         let mut buffer = Vec::with_capacity(self.cols * self.rows * 4);
-        for row in 0..self.rows {
-            for col in 0..self.cols {
+        for col in 0..self.cols {
+            for row in 0..self.rows {
                 let color = self.pixel_at(col, row);
                 buffer.push((color.r() * 255.0).round() as u8);
                 buffer.push((color.g() * 255.0).round() as u8);
@@ -106,14 +106,14 @@ mod testing {
 
     #[test]
     fn creating_canvas() {
-        let canvas = Canvas::new(20, 10, Tuple::color(0.0, 0.0, 0.0));
+        let canvas = Canvas::new(10, 20, Tuple::color(0.0, 0.0, 0.0));
         assert_eq!(canvas.width(), 10);
         assert_eq!(canvas.height(), 20);
     }
 
     #[test]
     fn writing_pixels_to_canvas() {
-        let mut canvas = Canvas::new(20, 10, Tuple::color(0.0, 0.0, 0.0));
+        let mut canvas = Canvas::new(10, 20, Tuple::color(0.0, 0.0, 0.0));
         let red = Tuple::color(1.0, 0.0, 0.0);
         canvas.write_pixel(3, 2, red.clone());
         assert_eq!(canvas.pixel_at(3, 2), &red);
@@ -121,7 +121,7 @@ mod testing {
 
     #[test]
     fn constructing_ppm_header() {
-        let canvas = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
+        let canvas = Canvas::new(5, 3, Tuple::color(0.0, 0.0, 0.0));
         let ppm = format!("{}", canvas);
         let lines: Vec<&str> = ppm.split('\n').collect();
         assert_eq!(lines[0], "P3");
@@ -131,7 +131,7 @@ mod testing {
 
     #[test]
     fn constructing_ppm_pixel_data() {
-        let mut canvas = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
+        let mut canvas = Canvas::new(5, 3, Tuple::color(0.0, 0.0, 0.0));
         let color_a = Tuple::color(1.5, 0.0, 0.0);
         let color_b = Tuple::color(0.0, 0.5, 0.0);
         let color_c = Tuple::color(-0.5, 0.0, 1.0);
@@ -147,7 +147,7 @@ mod testing {
 
     #[test]
     fn splitting_long_lines_in_ppm_files() {
-        let canvas = Canvas::new(2, 10, Tuple::color(1.0, 0.8, 0.6));
+        let canvas = Canvas::new(10, 2, Tuple::color(1.0, 0.8, 0.6));
         let ppm = format!("{}", canvas);
         let lines: Vec<&str> = ppm.split('\n').collect();
         assert_eq!(
@@ -170,7 +170,7 @@ mod testing {
 
     #[test]
     fn ppm_files_are_terminated_by_a_newline_character() {
-        let canvas = Canvas::new(3, 5, Tuple::color(0.0, 0.0, 0.0));
+        let canvas = Canvas::new(5, 3, Tuple::color(0.0, 0.0, 0.0));
         let ppm = format!("{}", canvas);
         let lines: Vec<&str> = ppm.split('\n').collect();
         assert_eq!(lines[lines.len() - 1], "");

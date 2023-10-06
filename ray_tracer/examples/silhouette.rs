@@ -1,4 +1,4 @@
-use ray_tracer::{Canvas, Intersection, Light, Ray, Sphere, Tuple, Shape, SolidPattern};
+use ray_tracer::{Canvas, Intersection, Light, Ray, Shape, SolidPattern, Sphere, Tuple};
 
 fn main() {
     let size = 256;
@@ -22,7 +22,14 @@ fn main() {
                 let point = ray.position(hit.t);
                 let normal = hit.object.normal_at(&point);
                 let eye = -ray.direction;
-                let color = hit.object.material().lighting(hit.object.as_ref(), &light, &point, &eye, &normal, false);
+                let color = hit.object.material().lighting(
+                    hit.object.as_ref(),
+                    &light,
+                    &point,
+                    &eye,
+                    &normal,
+                    false,
+                );
                 canvas.write_pixel(x, y, color);
             }
         }
