@@ -11,7 +11,7 @@ impl Cube {
     pub fn new(id: u32) -> Cube {
         Cube {
             transform: Matrix::identity(4),
-            material: Material::new(),
+            material: Material::default(),
             id,
         }
     }
@@ -38,6 +38,12 @@ impl Cube {
 }
 
 impl Shape for Cube {
+    fn material(&self) -> &Material {
+        &self.material
+    }
+    fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
+    }
     fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let (xtmin, xtmax) = Self::check_axis(ray.origin.x(), ray.direction.x());
         let (ytmin, ytmax) = Self::check_axis(ray.origin.y(), ray.direction.y());
@@ -62,12 +68,6 @@ impl Shape for Cube {
         } else {
             Tuple::vector(0.0, 0.0, point.z())
         }
-    }
-    fn material(&self) -> &Material {
-        &self.material
-    }
-    fn material_mut(&mut self) -> &mut Material {
-        &mut self.material
     }
     fn id(&self) -> u32 {
         self.id

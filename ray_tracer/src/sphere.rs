@@ -11,7 +11,7 @@ impl Sphere {
     pub fn new(id: u32) -> Sphere {
         Sphere {
             transform: Matrix::identity(4),
-            material: Material::new(),
+            material: Material::default(),
             id,
         }
     }
@@ -25,6 +25,12 @@ impl Sphere {
 }
 
 impl Shape for Sphere {
+    fn material(&self) -> &Material {
+        &self.material
+    }
+    fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
+    }
     fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let radius = 1.0;
         let sphere_to_ray = &ray.origin - Tuple::point(0.0, 0.0, 0.0);
@@ -46,12 +52,6 @@ impl Shape for Sphere {
     }
     fn local_normal_at(&self, point: &Tuple) -> Tuple {
         point - Tuple::point(0.0, 0.0, 0.0)
-    }
-    fn material(&self) -> &Material {
-        &self.material
-    }
-    fn material_mut(&mut self) -> &mut Material {
-        &mut self.material
     }
     fn id(&self) -> u32 {
         self.id
@@ -242,13 +242,13 @@ mod tests {
     #[test]
     fn sphere_has_default_material() {
         let shape = Sphere::new(0);
-        assert_eq!(shape.material(), &Material::new());
+        assert_eq!(shape.material(), &Material::default());
     }
 
     #[test]
     fn sphere_may_be_assigned_material() {
         let mut shape = Sphere::new(0);
-        let mut material = Material::new();
+        let mut material = Material::default();
         material.ambient = 1.0;
         shape.material_mut().ambient = 1.0;
         assert_eq!(shape.material(), &material);

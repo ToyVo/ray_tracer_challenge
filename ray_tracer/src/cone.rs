@@ -14,7 +14,7 @@ impl Cone {
     pub fn new(id: u32) -> Cone {
         Cone {
             transform: Matrix::identity(4),
-            material: Material::new(),
+            material: Material::default(),
             id,
             maximum: f64::INFINITY,
             minimum: f64::NEG_INFINITY,
@@ -49,6 +49,12 @@ impl Cone {
 }
 
 impl Shape for Cone {
+    fn material(&self) -> &Material {
+        &self.material
+    }
+    fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
+    }
     fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let a = ray.direction.x().powi(2) - ray.direction.y().powi(2) + ray.direction.z().powi(2);
         let b = 2.0 * ray.origin.x() * ray.direction.x() - 2.0 * ray.origin.y() * ray.direction.y()
@@ -105,12 +111,6 @@ impl Shape for Cone {
                 * if point.y() > 0.0 { -1.0 } else { 1.0 };
             Tuple::vector(point.x(), y, point.z())
         }
-    }
-    fn material(&self) -> &Material {
-        &self.material
-    }
-    fn material_mut(&mut self) -> &mut Material {
-        &mut self.material
     }
     fn id(&self) -> u32 {
         self.id

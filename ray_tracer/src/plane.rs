@@ -11,7 +11,7 @@ impl Plane {
     pub fn new(id: u32) -> Plane {
         Plane {
             transform: Matrix::identity(4),
-            material: Material::new(),
+            material: Material::default(),
             id,
         }
     }

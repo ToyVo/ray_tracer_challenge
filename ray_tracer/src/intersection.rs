@@ -34,7 +34,7 @@ impl Intersection {
         Intersection { t, object }
     }
 
-    pub fn hit(intersections: &Vec<Intersection>) -> Option<&Intersection> {
+    pub fn hit(intersections: &[Intersection]) -> Option<&Intersection> {
         let mut min = f64::INFINITY;
         let mut min_index = None;
         for (index, intersection) in intersections.iter().enumerate() {
@@ -274,8 +274,8 @@ mod tests {
             Intersection::new(5.25, c),
             Intersection::new(6., a),
         ];
-        let expected_n1 = vec![1., 1.5, 2., 2.5, 2.5, 1.5];
-        let expected_n2 = vec![1.5, 2., 2.5, 2.5, 1.5, 1.];
+        let expected_n1 = [1., 1.5, 2., 2.5, 2.5, 1.5];
+        let expected_n2 = [1.5, 2., 2.5, 2.5, 1.5, 1.];
         for (index, intersection) in intersections.iter().enumerate() {
             let comps = intersection.prepare_computations(&ray, Some(&intersections));
             assert_eq!(comps.n1, expected_n1[index]);

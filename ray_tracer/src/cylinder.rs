@@ -14,7 +14,7 @@ impl Cylinder {
     pub fn new(id: u32) -> Cylinder {
         Cylinder {
             transform: Matrix::identity(4),
-            material: Material::new(),
+            material: Material::default(),
             id,
             maximum: f64::INFINITY,
             minimum: f64::NEG_INFINITY,
@@ -49,6 +49,12 @@ impl Cylinder {
 }
 
 impl Shape for Cylinder {
+    fn material(&self) -> &Material {
+        &self.material
+    }
+    fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
+    }
     fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let mut intersections = vec![];
         let a = ray.direction.x().powi(2) + ray.direction.z().powi(2);
@@ -91,12 +97,6 @@ impl Shape for Cylinder {
         } else {
             Tuple::vector(point.x(), 0.0, point.z())
         }
-    }
-    fn material(&self) -> &Material {
-        &self.material
-    }
-    fn material_mut(&mut self) -> &mut Material {
-        &mut self.material
     }
     fn id(&self) -> u32 {
         self.id
@@ -289,7 +289,7 @@ mod tests {
     #[test]
     fn default_closed_value_for_cylinder() {
         let cylinder = Cylinder::new(0);
-        assert_eq!(cylinder.closed, false);
+        assert!(!cylinder.closed);
     }
 
     #[test]

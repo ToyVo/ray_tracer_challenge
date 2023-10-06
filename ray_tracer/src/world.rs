@@ -9,22 +9,14 @@ pub struct World {
     pub counter: Counter,
 }
 
-impl World {
-    pub fn new() -> World {
-        World {
-            objects: vec![],
-            lights: vec![],
-            counter: Counter::new(),
-        }
-    }
-
-    pub fn default() -> World {
-        let mut counter = Counter::new();
-        let mut s1 = Sphere::new(counter.next());
+impl Default for World {
+    fn default() -> World {
+        let mut counter = Counter::default();
+        let mut s1 = Sphere::new(counter.increment());
         s1.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(0.8, 1.0, 0.6)));
         s1.material_mut().diffuse = 0.7;
         s1.material_mut().specular = 0.2;
-        let mut s2 = Sphere::new(counter.next());
+        let mut s2 = Sphere::new(counter.increment());
         *s2.transform_mut() = Matrix::scaling(0.5, 0.5, 0.5);
         let light = Light::new(
             Tuple::point(-10.0, 10.0, -10.0),
@@ -34,6 +26,16 @@ impl World {
             objects: vec![Box::new(s1), Box::new(s2)],
             lights: vec![light],
             counter,
+        }
+    }
+}
+
+impl World {
+    pub fn new() -> World {
+        World {
+            objects: vec![],
+            lights: vec![],
+            counter: Counter::default(),
         }
     }
 
@@ -144,8 +146,9 @@ mod tests {
             Tuple::point(-10.0, 10.0, -10.0),
             Tuple::color(1.0, 1.0, 1.0),
         );
-        let mut material = Material::new();
-        material.pattern = Box::new(SolidPattern::new(Tuple::color(0.8, 1.0, 0.6)));
+        let mut material = Material::default_with_pattern(Box::new(SolidPattern::new(
+            Tuple::color(0.8, 1.0, 0.6),
+        )));
         material.diffuse = 0.7;
         material.specular = 0.2;
         let transform = Matrix::scaling(0.5, 0.5, 0.5);
@@ -268,8 +271,8 @@ mod tests {
             Tuple::point(0., 0., -10.),
             Tuple::color(1., 1., 1.),
         )];
-        let shape_a = Sphere::new(world.counter.next());
-        let mut shape_b = Sphere::new(world.counter.next());
+        let shape_a = Sphere::new(world.counter.increment());
+        let mut shape_b = Sphere::new(world.counter.increment());
         shape_b.transform_mut().translate(0., 0., 10.);
         world.objects = vec![Box::new(shape_a), Box::new(shape_b)];
         let ray = Ray::new(Tuple::point(0., 0., 5.), Tuple::vector(0., 0., 1.));
@@ -293,7 +296,7 @@ mod tests {
     #[test]
     fn reflected_color_for_reflective_material() {
         let mut world = World::default();
-        let mut plane = Plane::new(world.counter.next());
+        let mut plane = Plane::new(world.counter.increment());
         plane.material_mut().reflective = 0.5;
         *plane.transform_mut() = Matrix::translation(0., -1., 0.);
         let shape = Box::new(plane);
@@ -315,7 +318,7 @@ mod tests {
     #[test]
     fn shade_hit_with_reflective_material() {
         let mut world = World::default();
-        let mut plane = Plane::new(world.counter.next());
+        let mut plane = Plane::new(world.counter.increment());
         plane.material_mut().reflective = 0.5;
         *plane.transform_mut() = Matrix::translation(0., -1., 0.);
         let shape = Box::new(plane);
@@ -338,11 +341,11 @@ mod tests {
     fn color_at_with_mutually_reflective_surfaces() {
         let mut world = World::default();
         world.lights[0].position = Tuple::point(0., 0., 0.);
-        let mut lower = Plane::new(world.counter.next());
+        let mut lower = Plane::new(world.counter.increment());
         lower.material_mut().reflective = 1.;
         *lower.transform_mut() = Matrix::translation(0., -1., 0.);
         world.objects.push(Box::new(lower));
-        let mut upper = Plane::new(world.counter.next());
+        let mut upper = Plane::new(world.counter.increment());
         upper.material_mut().reflective = 1.;
         *upper.transform_mut() = Matrix::translation(0., 1., 0.);
         world.objects.push(Box::new(upper));
@@ -354,7 +357,7 @@ mod tests {
     #[test]
     fn reflected_color_at_maximum_recursive_depth() {
         let mut world = World::default();
-        let mut plane = Plane::new(world.counter.next());
+        let mut plane = Plane::new(world.counter.increment());
         plane.material_mut().reflective = 0.5;
         *plane.transform_mut() = Matrix::translation(0., -1., 0.);
         let shape = Box::new(plane);
@@ -419,7 +422,7 @@ mod tests {
     fn refracted_color_with_refracted_ray() {
         let mut world = World::default();
         world.objects[0].material_mut().ambient = 1.;
-        world.objects[0].material_mut().pattern = Box::new(TestPattern::new());
+        world.objects[0].material_mut().pattern = Box::<TestPattern>::default();
         world.objects[1].material_mut().transparency = 1.;
         world.objects[1].material_mut().refractive_index = 1.5;
         let shape_a = &world.objects[0];
@@ -439,12 +442,12 @@ mod tests {
     #[test]
     fn shade_hit_with_transparent_material() {
         let mut world = World::default();
-        let mut floor = Box::new(Plane::new(world.counter.next()));
+        let mut floor = Box::new(Plane::new(world.counter.increment()));
         floor.material_mut().transparency = 0.5;
         floor.material_mut().refractive_index = 1.5;
         *floor.transform_mut() = Matrix::translation(0., -1., 0.);
         world.objects.push(floor.clone());
-        let mut ball = Box::new(Sphere::new(world.counter.next()));
+        let mut ball = Box::new(Sphere::new(world.counter.increment()));
         ball.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(1., 0., 0.)));
         ball.material_mut().ambient = 0.5;
         *ball.transform_mut() = Matrix::translation(0., -3.5, -0.5);
@@ -466,13 +469,13 @@ mod tests {
     #[test]
     fn shade_hit_with_reflective_transparent_material() {
         let mut world = World::default();
-        let mut floor = Box::new(Plane::new(world.counter.next()));
+        let mut floor = Box::new(Plane::new(world.counter.increment()));
         floor.material_mut().reflective = 0.5;
         floor.material_mut().transparency = 0.5;
         floor.material_mut().refractive_index = 1.5;
         *floor.transform_mut() = Matrix::translation(0., -1., 0.);
         world.objects.push(floor.clone());
-        let mut ball = Box::new(Sphere::new(world.counter.next()));
+        let mut ball = Box::new(Sphere::new(world.counter.increment()));
         ball.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(1., 0., 0.)));
         ball.material_mut().ambient = 0.5;
         *ball.transform_mut() = Matrix::translation(0., -3.5, -0.5);

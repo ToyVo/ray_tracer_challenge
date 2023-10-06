@@ -143,7 +143,7 @@ impl Matrix {
         } else {
             let mut det = 0.;
             for col in 0..self.cols {
-                det = det + self.get(col, 0) * self.cofactor(col, 0);
+                det += self.get(col, 0) * self.cofactor(col, 0);
             }
             det
         }

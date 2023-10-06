@@ -38,7 +38,7 @@ mod tests {
     use super::*;
     use crate::Matrix;
     use approx::assert_relative_eq;
-    use std::f64::consts::SQRT_2;
+    use std::f64::consts::{FRAC_1_SQRT_2, SQRT_2};
 
     #[derive(Debug, PartialEq, Clone)]
     struct TestShape {
@@ -85,7 +85,7 @@ mod tests {
     fn intersecting_scaled_shape_with_ray() {
         let shape = TestShape {
             transform: Matrix::scaling(2., 2., 2.),
-            material: Material::new(),
+            material: Material::default(),
             id: 0,
         };
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
@@ -105,7 +105,7 @@ mod tests {
     fn intersecting_translated_shape_with_ray() {
         let shape = TestShape {
             transform: Matrix::translation(5., 0., 0.),
-            material: Material::new(),
+            material: Material::default(),
             id: 0,
         };
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
@@ -125,13 +125,13 @@ mod tests {
     fn computing_normal_on_translated_shape() {
         let shape = TestShape {
             transform: Matrix::translation(0., 1., 0.),
-            material: Material::new(),
+            material: Material::default(),
             id: 0,
         };
-        let normal = shape.normal_at(&Tuple::point(0., 1.70711, -0.70711));
+        let normal = shape.normal_at(&Tuple::point(0., FRAC_1_SQRT_2 + 1., -FRAC_1_SQRT_2));
         assert_relative_eq!(
             normal,
-            Tuple::vector(0., 0.70711, -0.70711),
+            Tuple::vector(0., FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
             epsilon = 1e-5f64
         );
     }
@@ -140,7 +140,7 @@ mod tests {
     fn computing_normal_on_transformed_shape() {
         let shape = TestShape {
             transform: Matrix::scaling(1., 0.5, 1.) * Matrix::rotation_z(std::f64::consts::PI / 5.),
-            material: Material::new(),
+            material: Material::default(),
             id: 0,
         };
         let normal = shape.normal_at(&Tuple::point(0., SQRT_2 / 2., -SQRT_2 / 2.));

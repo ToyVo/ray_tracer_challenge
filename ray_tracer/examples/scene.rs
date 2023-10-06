@@ -18,7 +18,7 @@ fn main() {
     );
     *s2.transform_mut() = Matrix::scaling(0.1, 0.1, 0.1) * Matrix::rotation_y(PI / 2.);
 
-    let mut floor = Plane::new(world.counter.next());
+    let mut floor = Plane::new(world.counter.increment());
     *floor.transform_mut() = Matrix::scaling(10., 0.01, 10.);
     floor.material_mut().pattern = Box::new(PerturbedPattern::new(Box::new(BlendedPattern::new(
         Box::new(s1),
@@ -26,7 +26,7 @@ fn main() {
     ))));
     floor.material_mut().specular = 0.;
 
-    let mut middle = Sphere::new(world.counter.next());
+    let mut middle = Sphere::new(world.counter.increment());
     *middle.transform_mut() = Matrix::translation(-0.5, 1., 0.5);
     middle.material_mut().pattern = Box::new(CheckeredPattern::new(
         Box::new(SolidPattern::new(Tuple::color(0.1, 1., 0.5))),
@@ -36,13 +36,13 @@ fn main() {
     middle.material_mut().diffuse = 0.7;
     middle.material_mut().specular = 0.3;
 
-    let mut right = Sphere::new(world.counter.next());
+    let mut right = Sphere::new(world.counter.increment());
     *right.transform_mut() = Matrix::translation(1.5, 0.5, -0.5) * Matrix::scaling(0.5, 0.5, 0.5);
     right.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(0.5, 1., 0.1)));
     right.material_mut().diffuse = 0.7;
     right.material_mut().specular = 0.3;
 
-    let mut left = Sphere::new(world.counter.next());
+    let mut left = Sphere::new(world.counter.increment());
     *left.transform_mut() =
         Matrix::translation(-1.5, 0.33, -0.75) * Matrix::scaling(0.33, 0.33, 0.33);
     left.material_mut().pattern = Box::new(SolidPattern::new(Tuple::color(1., 0.8, 0.1)));

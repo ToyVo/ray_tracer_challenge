@@ -336,8 +336,8 @@ pub mod tests {
         color: Tuple,
     }
 
-    impl TestPattern {
-        pub fn new() -> TestPattern {
+    impl Default for TestPattern {
+        fn default() -> Self {
             TestPattern {
                 transform: Matrix::identity(4),
                 color: Tuple::color(0., 0., 0.),
@@ -464,13 +464,13 @@ pub mod tests {
 
     #[test]
     fn default_pattern_transformation() {
-        let pattern = TestPattern::new();
+        let pattern = TestPattern::default();
         assert_eq!(*pattern.transform(), Matrix::identity(4));
     }
 
     #[test]
     fn assigning_transformation() {
-        let mut pattern = TestPattern::new();
+        let mut pattern = TestPattern::default();
         *pattern.transform_mut() = Matrix::translation(1.0, 2.0, 3.0);
         assert_eq!(*pattern.transform(), Matrix::translation(1.0, 2.0, 3.0));
     }
@@ -479,7 +479,7 @@ pub mod tests {
     fn pattern_with_object_transformation() {
         let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
-        let pattern = TestPattern::new();
+        let pattern = TestPattern::default();
         let color = pattern.pattern_at_object(&shape, &Tuple::point(2.0, 3.0, 4.0));
         assert_eq!(color, Tuple::color(1.0, 1.5, 2.0));
     }
@@ -487,7 +487,7 @@ pub mod tests {
     #[test]
     fn pattern_with_pattern_transformation() {
         let shape = Sphere::new(0);
-        let mut pattern = TestPattern::new();
+        let mut pattern = TestPattern::default();
         *pattern.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
         let color = pattern.pattern_at_object(&shape, &Tuple::point(2.0, 3.0, 4.0));
         assert_eq!(color, Tuple::color(1.0, 1.5, 2.0));
@@ -497,7 +497,7 @@ pub mod tests {
     fn pattern_with_both_object_and_pattern_transformation() {
         let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
-        let mut pattern = TestPattern::new();
+        let mut pattern = TestPattern::default();
         *pattern.transform_mut() = Matrix::translation(0.5, 1.0, 1.5);
         let color = pattern.pattern_at_object(&shape, &Tuple::point(2.5, 3.0, 3.5));
         assert_eq!(color, Tuple::color(0.75, 0.5, 0.25));

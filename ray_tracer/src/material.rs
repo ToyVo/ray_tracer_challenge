@@ -22,10 +22,25 @@ impl PartialEq for Material {
     }
 }
 
-impl Material {
-    pub fn new() -> Material {
+impl Default for Material {
+    fn default() -> Self {
         Material {
             pattern: Box::new(SolidPattern::new(Tuple::color(1.0, 1.0, 1.0))),
+            ambient: 0.1,
+            diffuse: 0.9,
+            specular: 0.9,
+            shininess: 200.0,
+            reflective: 0.0,
+            transparency: 0.0,
+            refractive_index: 1.0,
+        }
+    }
+}
+
+impl Material {
+    pub fn default_with_pattern(pattern: Box<dyn Pattern>) -> Material {
+        Material {
+            pattern,
             ambient: 0.1,
             diffuse: 0.9,
             specular: 0.9,
@@ -81,7 +96,7 @@ mod tests {
 
     #[test]
     fn material_has_default_values() {
-        let material = Material::new();
+        let material = Material::default();
         assert_eq!(material.ambient, 0.1);
         assert_eq!(material.diffuse, 0.9);
         assert_eq!(material.specular, 0.9);
@@ -90,7 +105,7 @@ mod tests {
 
     #[test]
     fn lighting_eye_between_light_and_surface() {
-        let material = Material::new();
+        let material = Material::default();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
@@ -109,7 +124,7 @@ mod tests {
 
     #[test]
     fn lighting_eye_between_light_and_surface_eye_offset_45_degrees() {
-        let material = Material::new();
+        let material = Material::default();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eye_vector = Tuple::vector(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
@@ -128,7 +143,7 @@ mod tests {
 
     #[test]
     fn lighting_eye_opposite_surface_light_offset_45_degrees() {
-        let material = Material::new();
+        let material = Material::default();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
@@ -155,7 +170,7 @@ mod tests {
 
     #[test]
     fn lighting_eye_in_path_of_reflection_vector() {
-        let material = Material::new();
+        let material = Material::default();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eye_vector = Tuple::vector(0.0, -SQRT_2 / 2.0, -SQRT_2 / 2.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
@@ -181,7 +196,7 @@ mod tests {
 
     #[test]
     fn lighting_light_behind_surface() {
-        let material = Material::new();
+        let material = Material::default();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
@@ -200,7 +215,7 @@ mod tests {
 
     #[test]
     fn lighting_surface_in_shadow() {
-        let material = Material::new();
+        let material = Material::default();
         let position = Tuple::point(0.0, 0.0, 0.0);
         let eye_vector = Tuple::vector(0.0, 0.0, -1.0);
         let normal_vector = Tuple::vector(0.0, 0.0, -1.0);
@@ -213,11 +228,10 @@ mod tests {
 
     #[test]
     fn lighting_with_pattern_applied() {
-        let mut material = Material::new();
-        material.pattern = Box::new(StripePattern::new(
+        let mut material = Material::default_with_pattern(Box::new(StripePattern::new(
             Box::new(SolidPattern::new(Tuple::color(1.0, 1.0, 1.0))),
             Box::new(SolidPattern::new(Tuple::color(0.0, 0.0, 0.0))),
-        ));
+        )));
         material.ambient = 1.0;
         material.diffuse = 0.0;
         material.specular = 0.0;
@@ -247,13 +261,13 @@ mod tests {
 
     #[test]
     fn reflectivity_for_default_material() {
-        let material = Material::new();
+        let material = Material::default();
         assert_eq!(material.reflective, 0.0);
     }
 
     #[test]
     fn transparency_and_refractive_index_for_default_material() {
-        let material = Material::new();
+        let material = Material::default();
         assert_eq!(material.transparency, 0.0);
         assert_eq!(material.refractive_index, 1.0);
     }
