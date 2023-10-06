@@ -129,6 +129,7 @@ impl Transform for Cone {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn ray_intersects_cone_a() {
@@ -146,8 +147,8 @@ mod tests {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(1.0, 1.0, 1.0).normalize());
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
-        assert!((intersections[0].t - 8.66025).abs() < 1e-5f64);
-        assert!((intersections[1].t - 8.66025).abs() < 1e-5f64);
+        assert_relative_eq!(intersections[0].t, 8.66025, epsilon = 1e-5f64);
+        assert_relative_eq!(intersections[1].t, 8.66025, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -156,8 +157,8 @@ mod tests {
         let ray = Ray::new(Tuple::point(1.0, 1.0, -5.0), Tuple::vector(-0.5, -1.0, 1.0).normalize());
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
-        assert!((intersections[0].t - 4.55006).abs() < 1e-5f64);
-        assert!((intersections[1].t - 49.44994).abs() < 1e-5f64);
+        assert_relative_eq!(intersections[0].t, 4.55006, epsilon = 1e-5f64);
+        assert_relative_eq!(intersections[1].t, 49.44994, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -166,7 +167,7 @@ mod tests {
         let ray = Ray::new(Tuple::point(0.0, 0.0, -1.0), Tuple::vector(0.0, 1.0, 1.0).normalize());
         let intersections = cone.local_intersect(&ray);
         assert_eq!(intersections.len(), 1);
-        assert!((intersections[0].t - 0.35355).abs() < 1e-5f64);
+        assert_relative_eq!(intersections[0].t, 0.35355, epsilon = 1e-5f64);
     }
 
     #[test]

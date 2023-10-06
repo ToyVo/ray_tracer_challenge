@@ -67,6 +67,7 @@ impl Transform for Sphere {
 #[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
+    use approx::assert_relative_eq;
 
     use super::*;
 
@@ -216,7 +217,7 @@ mod tests {
         let mut shape = Sphere::new(0);
         *shape.transform_mut() = Matrix::translation(0.0, 1.0, 0.0);
         let normal = shape.normal_at(&Tuple::point(0.0, FRAC_1_SQRT_2 + 1., -FRAC_1_SQRT_2));
-        assert!(normal.nearly_equals(&Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2), 1e-5f64));
+        assert_relative_eq!(normal, Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2), epsilon = 1e-5f64);
     }
 
     #[test]
@@ -228,7 +229,7 @@ mod tests {
             SQRT_2 / 2.0,
             -SQRT_2 / 2.0,
         ));
-        assert!(normal.nearly_equals(&Tuple::vector(0.0, 0.97014, -0.24254), 1e-5f64));
+        assert_relative_eq!(normal, Tuple::vector(0.0, 0.97014, -0.24254), epsilon = 1e-5f64);
     }
 
     #[test]

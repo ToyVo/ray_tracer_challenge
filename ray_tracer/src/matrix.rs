@@ -1,4 +1,5 @@
 use std::ops::Mul;
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 use crate::Tuple;
 
@@ -176,17 +177,6 @@ impl Matrix {
         result
     }
 
-    pub fn nearly_equals(&self, other: &Matrix, delta: f64) -> bool {
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                if (self.get(row, col) - other.get(row, col)).abs() > delta {
-                    return false;
-                }
-            }
-        }
-        true
-    }
-
     pub fn rotation_x(rad: f64) -> Matrix {
         let mut result = Matrix::identity(4);
         result.set(1, 1, f64::cos(rad));
@@ -306,10 +296,78 @@ impl Mul<Tuple> for &Matrix {
     }
 }
 
+impl AbsDiffEq for Matrix {
+    type Epsilon = f64;
+
+    fn default_epsilon() -> f64 {
+        f64::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Matrix, epsilon: f64) -> bool {
+        if self.cols != other.cols || self.rows != other.rows {
+            return false;
+        }
+        for x in 0..self.cols {
+            for y in 0..self.rows {
+                if !self.get(x, y).abs_diff_eq(&other.get(x, y), epsilon) {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+impl RelativeEq for Matrix {
+    fn default_max_relative() -> f64 {
+        f64::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Matrix,
+        epsilon: f64,
+        max_relative: f64,
+    ) -> bool {
+        if self.cols != other.cols || self.rows != other.rows {
+            return false;
+        }
+        for x in 0..self.cols {
+            for y in 0..self.rows {
+                if !self.get(x, y).relative_eq(&other.get(x, y), epsilon, max_relative) {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+impl UlpsEq for Matrix {
+    fn default_max_ulps() -> u32 {
+        f64::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Matrix, epsilon: f64, max_ulps: u32) -> bool {
+        if self.cols != other.cols || self.rows != other.rows {
+            return false;
+        }
+        for x in 0..self.cols {
+            for y in 0..self.rows {
+                if !self.get(x, y).ulps_eq(&other.get(x, y), epsilon, max_ulps) {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::f64::consts::PI;
     use std::f64::consts::SQRT_2;
+    use approx::assert_relative_eq;
 
     use super::*;
 
@@ -709,7 +767,7 @@ mod tests {
         );
         let product = &matrix_a * &matrix_b;
         let result = product * matrix_b.inverse();
-        assert!(matrix_a.nearly_equals(&result, 1e-5f64));
+        assert_relative_eq!(matrix_a, result, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -778,8 +836,8 @@ mod tests {
         let expected_full = Tuple::point(0., 0., 1.);
         let result_half = half_quarter * &point;
         let result_full = full_quarter * point;
-        assert!(expected_half.nearly_equals(&result_half, 1e-5f64));
-        assert!(expected_full.nearly_equals(&result_full, 1e-5f64));
+        assert_relative_eq!(expected_half, result_half, epsilon = 1e-5f64);
+        assert_relative_eq!(expected_full, result_full, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -789,7 +847,7 @@ mod tests {
         let inv = half_quarter.inverse();
         let expected = Tuple::point(0., SQRT_2 / 2., -SQRT_2 / 2.);
         let result = inv * point;
-        assert!(expected.nearly_equals(&result, 1e-5f64));
+        assert_relative_eq!(expected, result, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -801,8 +859,8 @@ mod tests {
         let expected_full = Tuple::point(1., 0., 0.);
         let result_half = half_quarter * &point;
         let result_full = full_quarter * point;
-        assert!(expected_half.nearly_equals(&result_half, 1e-5f64));
-        assert!(expected_full.nearly_equals(&result_full, 1e-5f64));
+        assert_relative_eq!(expected_half, result_half, epsilon = 1e-5f64);
+        assert_relative_eq!(expected_full, result_full, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -814,8 +872,8 @@ mod tests {
         let expected_full = Tuple::point(-1., 0., 0.);
         let result_half = half_quarter * &point;
         let result_full = full_quarter * point;
-        assert!(expected_half.nearly_equals(&result_half, 1e-5f64));
-        assert!(expected_full.nearly_equals(&result_full, 1e-5f64));
+        assert_relative_eq!(expected_half, result_half, epsilon = 1e-5f64);
+        assert_relative_eq!(expected_full, result_full, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -873,9 +931,9 @@ mod tests {
         let scale = Matrix::scaling(5., 5., 5.);
         let translate = Matrix::translation(10., 5., 7.);
         let rotated_point = rotate * point;
-        assert!(Tuple::point(1., -1., 0.).nearly_equals(&rotated_point, 1e-5f64));
+        assert_relative_eq!(Tuple::point(1., -1., 0.), rotated_point, epsilon = 1e-5f64);
         let scaled_point = scale * rotated_point;
-        assert!(Tuple::point(5., -5., 0.).nearly_equals(&scaled_point, 1e-5f64));
+        assert_relative_eq!(Tuple::point(5., -5., 0.), scaled_point, epsilon = 1e-5f64);
         let translated_point = translate * scaled_point;
         assert_eq!(translated_point, Tuple::point(15., 0., 7.));
     }

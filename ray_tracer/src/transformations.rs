@@ -16,6 +16,7 @@ pub fn view_transform(from: Tuple, to: Tuple, up: Tuple) -> Matrix {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn transformation_matrix_default_orientation() {
@@ -50,11 +51,11 @@ mod tests {
         let to = Tuple::point(4., -2., 8.);
         let up = Tuple::vector(1., 1., 0.);
         let transform = view_transform(from, to, up);
-        assert!(transform.nearly_equals(&Matrix::from_vec(4, 4, vec![
+        assert_relative_eq!(transform, Matrix::from_vec(4, 4, vec![
             -0.50709, 0.50709, 0.67612, -2.36643,
             0.76772, 0.60609, 0.12122, -2.82843,
             -0.35857, 0.59761, -0.71714, 0.,
             0., 0., 0., 1.,
-        ]), 1e-5f64));
+        ]), epsilon = 1e-5f64);
     }
 }

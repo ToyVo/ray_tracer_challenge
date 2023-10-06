@@ -69,6 +69,7 @@ mod tests {
     use super::*;
 
     use crate::{StripePattern, Sphere};
+    use approx::assert_relative_eq;
 
     #[test]
     fn material_has_default_values() {
@@ -112,7 +113,7 @@ mod tests {
         let light = Light::new(Tuple::point(0.0, 10.0, -10.0), Tuple::color(1.0, 1.0, 1.0));
         let shape = Sphere::new(0);
         let result = material.lighting(&shape, &light, &position, &eye_vector, &normal_vector, false);
-        assert!(result.nearly_equals(&Tuple::color(0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1), 1e-5f64));
+        assert_relative_eq!(result, Tuple::color(0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1, 0.9 * SQRT_2 / 2. + 0.1), epsilon = 1e-5f64);
     }
 
     #[test]

@@ -125,6 +125,7 @@ mod tests {
     use super::*;
     use crate::{Material, Plane, TestPattern};
     use std::f64::consts::SQRT_2;
+    use approx::assert_relative_eq;
 
     #[test]
     fn creating_world() {
@@ -172,7 +173,7 @@ mod tests {
         let intersection = Intersection::new(4., shape);
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.shade_hit(&comps, 5);
-        assert!(color.nearly_equals(&Tuple::color(0.38066, 0.47583, 0.2855), 1e-5f64));
+        assert_relative_eq!(color, Tuple::color(0.38066, 0.47583, 0.2855), epsilon = 1e-5f64);
     }
 
     #[test]
@@ -187,7 +188,7 @@ mod tests {
         let intersection = Intersection::new(0.5, shape);
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.shade_hit(&comps, 5);
-        assert!(color.nearly_equals(&Tuple::color(0.90498, 0.90498, 0.90498), 1e-5f64));
+        assert_relative_eq!(color, Tuple::color(0.90498, 0.90498, 0.90498), epsilon = 1e-5f64);
     }
 
     #[test]
@@ -203,7 +204,7 @@ mod tests {
         let world = World::default();
         let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
         let color = world.color_at(&ray, 5);
-        assert!(color.nearly_equals(&Tuple::color(0.38066, 0.47583, 0.2855), 1e-5f64));
+        assert_relative_eq!(color, Tuple::color(0.38066, 0.47583, 0.2855), epsilon = 1e-5f64);
     }
 
     #[test]
@@ -259,7 +260,7 @@ mod tests {
         let intersection = Intersection::new(4., world.objects[1].clone());
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.shade_hit(&comps, 5);
-        assert!(color.nearly_equals(&Tuple::color(0.1, 0.1, 0.1), 1e-5f64));
+        assert_relative_eq!(color, Tuple::color(0.1, 0.1, 0.1), epsilon = 1e-5f64);
     }
 
     #[test]
@@ -288,7 +289,7 @@ mod tests {
         let intersection = Intersection::new(SQRT_2, shape);
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.reflected_color(&comps, 5);
-        assert!(color.nearly_equals(&Tuple::color(0.19032, 0.2379, 0.14274), 1e-4f64));
+        assert_relative_eq!(color, Tuple::color(0.19032, 0.2379, 0.14274), epsilon = 1e-4f64);
     }
 
     #[test]
@@ -306,7 +307,7 @@ mod tests {
         let intersection = Intersection::new(SQRT_2, shape);
         let comps = intersection.prepare_computations(&ray, None);
         let color = world.shade_hit(&comps, 5);
-        assert!(color.nearly_equals(&Tuple::color(0.87677, 0.92436, 0.82918), 1e-4f64));
+        assert_relative_eq!(color, Tuple::color(0.87677, 0.92436, 0.82918), epsilon = 1e-4f64);
     }
 
     #[test]
@@ -323,7 +324,7 @@ mod tests {
         world.objects.push(Box::new(upper));
         let ray = Ray::new(Tuple::point(0., 0., 0.), Tuple::vector(0., 1., 0.));
         let color = world.color_at(&ray, 5);
-        assert!(color.nearly_equals(&Tuple::color(1.9, 1.9, 1.9), 1e-5f64));
+        assert_relative_eq!(color, Tuple::color(1.9, 1.9, 1.9), epsilon = 1e-5f64);
     }
 
     #[test]
@@ -408,7 +409,7 @@ mod tests {
         ];
         let comps = intersections[2].prepare_computations(&ray, Some(&intersections));
         let c = world.refracted_color(&comps, 5);
-        assert!(c.nearly_equals(&Tuple::color(0., 0.99888, 0.04725), 1e-4f64));
+        assert_relative_eq!(c, Tuple::color(0., 0.99888, 0.04725), epsilon = 1e-4f64);
     }
 
     #[test]
@@ -430,7 +431,7 @@ mod tests {
         ];
         let comps = intersections[0].prepare_computations(&ray, Some(&intersections));
         let color = world.shade_hit(&comps, 5);
-        assert!(color.nearly_equals(&Tuple::color(0.93642, 0.68642, 0.68642), 1e-5f64));
+        assert_relative_eq!(color, Tuple::color(0.93642, 0.68642, 0.68642), epsilon = 1e-5f64);
     }
 
     #[test]
@@ -453,6 +454,6 @@ mod tests {
         ];
         let comps = intersections[0].prepare_computations(&ray, Some(&intersections));
         let color = world.shade_hit(&comps, 5);
-        assert!(color.nearly_equals(&Tuple::color(0.93391, 0.69643, 0.69243), 1e-5f64));
+        assert_relative_eq!(color, Tuple::color(0.93391, 0.69643, 0.69243), epsilon = 1e-5f64);
     }
 }

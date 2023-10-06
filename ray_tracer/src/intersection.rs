@@ -136,6 +136,7 @@ impl Computations {
 mod tests {
     use crate::{Matrix, Plane, Ray, Sphere, Transform, Tuple};
     use std::f64::consts::SQRT_2;
+    use approx::assert_relative_eq;
 
     use super::*;
 
@@ -320,7 +321,7 @@ mod tests {
         ];
         let comps = intersections[1].prepare_computations(&ray, Some(&intersections));
         let reflectance = comps.schlick();
-        assert!(reflectance - 0.04 < 1e-5f64);
+        assert_relative_eq!(reflectance, 0.04, epsilon = 1e-5f64);
     }
 
     #[test]

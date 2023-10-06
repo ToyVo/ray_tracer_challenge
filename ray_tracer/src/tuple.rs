@@ -1,6 +1,7 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use crate::Matrix;
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tuple {
@@ -133,15 +134,6 @@ impl Tuple {
     pub fn normalize(&self) -> Tuple {
         let magnitude = self.magnitude();
         Tuple::from_vec(self.data.iter().map(|x| x / magnitude).collect())
-    }
-
-    pub fn nearly_equals(&self, other: &Tuple, delta: f64) -> bool {
-        for (x, y) in self.data.iter().zip(other.data.iter()) {
-            if (x - y).abs() > delta {
-                return false;
-            }
-        }
-        true
     }
 
     pub fn reflect(&self, normal: &Tuple) -> Tuple {
@@ -311,8 +303,61 @@ impl Div<f64> for Tuple {
     }
 }
 
+impl AbsDiffEq for Tuple {
+    type Epsilon = f64;
+
+    fn default_epsilon() -> f64 {
+        f64::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        for (x, y) in self.data.iter().zip(other.data.iter()) {
+            if !x.abs_diff_eq(y, epsilon) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+impl RelativeEq for Tuple {
+    fn default_max_relative() -> f64 {
+        f64::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        for (x, y) in self.data.iter().zip(other.data.iter()) {
+            if !x.relative_eq(y, epsilon, max_relative) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+impl UlpsEq for Tuple {
+    fn default_max_ulps() -> u32 {
+        f64::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        for (x, y) in self.data.iter().zip(other.data.iter()) {
+            if !x.ulps_eq(y, epsilon, max_ulps) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use approx::assert_relative_eq;
     use super::*;
 
     #[test]
@@ -514,7 +559,7 @@ mod tests {
         let color_b = Tuple::color(0.7, 0.1, 0.25);
         let expected = Tuple::color(0.2, 0.5, 0.5);
         let result = color_a - color_b;
-        assert!(result.nearly_equals(&expected, 1e-5f64))
+        assert_relative_eq!(result, expected, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -529,7 +574,7 @@ mod tests {
         let color_b = Tuple::color(0.9, 1.0, 0.1);
         let expected = Tuple::color(0.9, 0.2, 0.04);
         let result = color_a * color_b;
-        assert!(result.nearly_equals(&expected, 1e-5f64))
+        assert_relative_eq!(result, expected, epsilon = 1e-5f64);
     }
 
     #[test]
@@ -554,6 +599,6 @@ mod tests {
         let normal = Tuple::vector(2.0_f64.sqrt() / 2., 2.0_f64.sqrt() / 2., 0.);
         let ray = vector.reflect(&normal);
         let expected = Tuple::vector(1., 0., 0.);
-        assert!(ray.nearly_equals(&expected, 1e-5f64));
+        assert_relative_eq!(ray, expected, epsilon = 1e-5f64);
     }
 }

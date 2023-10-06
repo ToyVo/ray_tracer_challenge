@@ -115,11 +115,12 @@ impl Transform for Cylinder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn ray_misses_cylinder_a() {
         let cylinder = Cylinder::new(0);
-        let ray = Ray::new(Tuple::point(1.0, 0.0, 0.0), Tuple::vector(0.0, 1.0, 0.0));
+        let ray = Ray::new(Tuple::point(1.0, 0.0, 0.0), Tuple::vector(0.0, 1.0, 0.0).normalize());
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -127,7 +128,7 @@ mod tests {
     #[test]
     fn ray_misses_cylinder_b() {
         let cylinder = Cylinder::new(0);
-        let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 1.0, 0.0));
+        let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 1.0, 0.0).normalize());
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -135,7 +136,7 @@ mod tests {
     #[test]
     fn ray_misses_cylinder_c() {
         let cylinder = Cylinder::new(0);
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(1.0, 1.0, 1.0));
+        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(1.0, 1.0, 1.0).normalize());
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -143,7 +144,7 @@ mod tests {
     #[test]
     fn ray_hits_cylinder_a() {
         let cylinder = Cylinder::new(0);
-        let ray = Ray::new(Tuple::point(1.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Tuple::point(1.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0).normalize());
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 5.0);
@@ -153,7 +154,7 @@ mod tests {
     #[test]
     fn ray_hits_cylinder_b() {
         let cylinder = Cylinder::new(0);
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0).normalize());
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 4.0);
@@ -163,11 +164,11 @@ mod tests {
     #[test]
     fn ray_hits_cylinder_c() {
         let cylinder = Cylinder::new(0);
-        let ray = Ray::new(Tuple::point(0.5, 0.0, -5.0), Tuple::vector(0.1, 1.0, 1.0));
+        let ray = Ray::new(Tuple::point(0.5, 0.0, -5.0), Tuple::vector(0.1, 1.0, 1.0).normalize());
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
-        assert!(intersections[0].t - 6.80798 < 1e-5f64);
-        assert!(intersections[1].t - 7.08872 < 1e-5f64);
+        assert_relative_eq!(intersections[0].t, 6.80798, epsilon = 1e-5f64);
+        assert_relative_eq!(intersections[1].t, 7.08872, epsilon = 1e-5f64);
     }
 
     #[test]
