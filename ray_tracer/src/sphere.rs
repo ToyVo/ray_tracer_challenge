@@ -1,8 +1,9 @@
-use crate::{Intersection, Material, Matrix, Ray, Shape, Transform, Tuple};
+use crate::{Intersection, Material, Ray, Shape, Transform};
+use nalgebra_glm::{vec4, DMat4, DVec4};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Sphere {
-    transform: Matrix,
+    transform: DMat4,
     material: Material,
     id: u32,
 }
@@ -10,7 +11,7 @@ pub struct Sphere {
 impl Sphere {
     pub fn new(id: u32) -> Sphere {
         Sphere {
-            transform: Matrix::identity(4),
+            transform: DMat4::identity(),
             material: Material::default(),
             id,
         }
@@ -33,7 +34,7 @@ impl Shape for Sphere {
     }
     fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let radius = 1.0;
-        let sphere_to_ray = &ray.origin - Tuple::point(0.0, 0.0, 0.0);
+        let sphere_to_ray = ray.origin - vec4(0.0, 0.0, 0.0, 1.);
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * ray.direction.dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - radius;
@@ -50,8 +51,8 @@ impl Shape for Sphere {
             ]
         }
     }
-    fn local_normal_at(&self, point: &Tuple) -> Tuple {
-        point - Tuple::point(0.0, 0.0, 0.0)
+    fn local_normal_at(&self, point: &DVec4) -> DVec4 {
+        point - vec4(0.0, 0.0, 0.0, 1.)
     }
     fn id(&self) -> u32 {
         self.id
@@ -59,10 +60,10 @@ impl Shape for Sphere {
 }
 
 impl Transform for Sphere {
-    fn transform(&self) -> &Matrix {
+    fn transform(&self) -> &DMat4 {
         &self.transform
     }
-    fn transform_mut(&mut self) -> &mut Matrix {
+    fn transform_mut(&mut self) -> &mut DMat4 {
         &mut self.transform
     }
 }
@@ -70,13 +71,14 @@ impl Transform for Sphere {
 #[cfg(test)]
 mod tests {
     use approx::assert_relative_eq;
+    use nalgebra_glm::{rotate_z, scale, translate, vec3, vec4, DMat4};
     use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
 
     use super::*;
 
     #[test]
     fn ray_intersects_sphere_at_two_points() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 0.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let shape = Sphere::new(0);
         let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
@@ -86,7 +88,7 @@ mod tests {
 
     #[test]
     fn ray_intersects_sphere_at_tangent() {
-        let ray = Ray::new(Tuple::point(0.0, 1.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 1.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let shape = Sphere::new(0);
         let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
@@ -96,7 +98,7 @@ mod tests {
 
     #[test]
     fn ray_misses_sphere() {
-        let ray = Ray::new(Tuple::point(0.0, 2.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 2.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let shape = Sphere::new(0);
         let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 0);
@@ -104,7 +106,7 @@ mod tests {
 
     #[test]
     fn ray_originates_inside_sphere() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 0.0, 0.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let shape = Sphere::new(0);
         let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
@@ -114,7 +116,7 @@ mod tests {
 
     #[test]
     fn sphere_behind_ray() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, 5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 0.0, 5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let shape = Sphere::new(0);
         let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
@@ -124,7 +126,7 @@ mod tests {
 
     #[test]
     fn intersect_sets_object_on_intersection() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 0.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let shape = Sphere::new(0);
         let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
@@ -135,21 +137,24 @@ mod tests {
     #[test]
     fn sphere_default_transformation() {
         let shape = Sphere::new(0);
-        assert_eq!(shape.transform(), &Matrix::identity(4));
+        assert_eq!(shape.transform(), &DMat4::identity());
     }
 
     #[test]
     fn changing_sphere_transformation() {
         let mut shape = Sphere::new(0);
-        *shape.transform_mut() = Matrix::translation(2.0, 3.0, 4.0);
-        assert_eq!(shape.transform(), &Matrix::translation(2.0, 3.0, 4.0));
+        *shape.transform_mut() = translate(&DMat4::identity(), &vec3(2.0, 3.0, 4.0));
+        assert_eq!(
+            shape.transform(),
+            &translate(&DMat4::identity(), &vec3(2.0, 3.0, 4.0))
+        );
     }
 
     #[test]
     fn intersecting_scaled_sphere_with_ray() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 0.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let mut shape = Sphere::new(0);
-        *shape.transform_mut() = Matrix::scaling(2.0, 2.0, 2.0);
+        *shape.transform_mut() = scale(&DMat4::identity(), &vec3(2.0, 2.0, 2.0));
         let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 3.0);
@@ -158,9 +163,9 @@ mod tests {
 
     #[test]
     fn intersecting_translated_sphere_with_ray() {
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 0.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let mut shape = Sphere::new(0);
-        *shape.transform_mut() = Matrix::translation(5.0, 0.0, 0.0);
+        *shape.transform_mut() = translate(&DMat4::identity(), &vec3(5.0, 0.0, 0.0));
         let intersections = shape.intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -168,38 +173,40 @@ mod tests {
     #[test]
     fn normal_on_sphere_at_point_on_x_axis() {
         let shape = Sphere::new(0);
-        let normal = shape.normal_at(&Tuple::point(1.0, 0.0, 0.0));
-        assert_eq!(normal, Tuple::vector(1.0, 0.0, 0.0));
+        let normal = shape.normal_at(&vec4(1.0, 0.0, 0.0, 1.));
+        assert_eq!(normal, vec4(1.0, 0.0, 0.0, 0.));
     }
 
     #[test]
     fn normal_on_sphere_at_point_on_y_axis() {
         let shape = Sphere::new(0);
-        let normal = shape.normal_at(&Tuple::point(0.0, 1.0, 0.0));
-        assert_eq!(normal, Tuple::vector(0.0, 1.0, 0.0));
+        let normal = shape.normal_at(&vec4(0.0, 1.0, 0.0, 1.));
+        assert_eq!(normal, vec4(0.0, 1.0, 0.0, 0.));
     }
 
     #[test]
     fn normal_on_sphere_at_point_on_z_axis() {
         let shape = Sphere::new(0);
-        let normal = shape.normal_at(&Tuple::point(0.0, 0.0, 1.0));
-        assert_eq!(normal, Tuple::vector(0.0, 0.0, 1.0));
+        let normal = shape.normal_at(&vec4(0.0, 0.0, 1.0, 1.));
+        assert_eq!(normal, vec4(0.0, 0.0, 1.0, 0.));
     }
 
     #[test]
-    fn normal_on_sphere_at_nonaxial_point() {
+    fn normal_on_sphere_at_non_axial_point() {
         let shape = Sphere::new(0);
-        let normal = shape.normal_at(&Tuple::point(
+        let normal = shape.normal_at(&vec4(
             3.0_f64.sqrt() / 3.0,
             3.0_f64.sqrt() / 3.0,
             3.0_f64.sqrt() / 3.0,
+            1.,
         ));
         assert_eq!(
             normal,
-            Tuple::vector(
+            vec4(
                 3.0_f64.sqrt() / 3.0,
                 3.0_f64.sqrt() / 3.0,
                 3.0_f64.sqrt() / 3.0,
+                0.
             )
         );
     }
@@ -207,10 +214,11 @@ mod tests {
     #[test]
     fn normal_is_normalized() {
         let shape = Sphere::new(0);
-        let normal = shape.normal_at(&Tuple::point(
+        let normal = shape.normal_at(&vec4(
             3.0_f64.sqrt() / 3.0,
             3.0_f64.sqrt() / 3.0,
             3.0_f64.sqrt() / 3.0,
+            1.,
         ));
         assert_eq!(normal, normal.normalize());
     }
@@ -218,11 +226,11 @@ mod tests {
     #[test]
     fn normal_on_translated_sphere() {
         let mut shape = Sphere::new(0);
-        *shape.transform_mut() = Matrix::translation(0.0, 1.0, 0.0);
-        let normal = shape.normal_at(&Tuple::point(0.0, FRAC_1_SQRT_2 + 1., -FRAC_1_SQRT_2));
+        *shape.transform_mut() = translate(&DMat4::identity(), &vec3(0.0, 1.0, 0.0));
+        let normal = shape.normal_at(&vec4(0.0, FRAC_1_SQRT_2 + 1., -FRAC_1_SQRT_2, 1.));
         assert_relative_eq!(
             normal,
-            Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
+            vec4(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2, 0.),
             epsilon = 1e-5f64
         );
     }
@@ -230,13 +238,10 @@ mod tests {
     #[test]
     fn normal_on_transformed_sphere() {
         let mut shape = Sphere::new(0);
-        *shape.transform_mut() = Matrix::scaling(1.0, 0.5, 1.0) * Matrix::rotation_z(PI / 5.0);
-        let normal = shape.normal_at(&Tuple::point(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0));
-        assert_relative_eq!(
-            normal,
-            Tuple::vector(0.0, 0.97014, -0.24254),
-            epsilon = 1e-5f64
-        );
+        *shape.transform_mut() = scale(&DMat4::identity(), &vec3(1.0, 0.5, 1.0))
+            * rotate_z(&DMat4::identity(), PI / 5.0);
+        let normal = shape.normal_at(&vec4(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0, 0.));
+        assert_relative_eq!(normal, vec4(0.0, 0.97014, -0.24254, 0.), epsilon = 1e-5f64);
     }
 
     #[test]

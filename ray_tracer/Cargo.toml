@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-approx = { version = "0.5.1", features = [] }
-bracket-noise = "0.8.7"
-dyn-clone = "1.0.14"
-nalgebra = "0.32.3"
-
+approx = { version = "0.5", features = [] }
+bracket-noise = "0.8"
+dyn-clone = "1.0"
+nalgebra = "0.32"
+nalgebra-glm = "0.18"

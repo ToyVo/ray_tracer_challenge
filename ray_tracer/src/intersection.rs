@@ -1,4 +1,5 @@
-use crate::{Ray, Shape, Tuple};
+use crate::{Ray, Shape};
+use nalgebra_glm::DVec4;
 
 #[derive(Clone, Debug)]
 pub struct Intersection {
@@ -18,13 +19,13 @@ impl PartialEq for Intersection {
 pub struct Computations {
     pub t: f64,
     pub object: Box<dyn Shape>,
-    pub point: Tuple,
-    pub eye_vector: Tuple,
-    pub normal_vector: Tuple,
+    pub point: DVec4,
+    pub eye_vector: DVec4,
+    pub normal_vector: DVec4,
     pub inside: bool,
-    pub over_point: Tuple,
-    pub under_point: Tuple,
-    pub reflect_vector: Tuple,
+    pub over_point: DVec4,
+    pub under_point: DVec4,
+    pub reflect_vector: DVec4,
     pub n1: f64,
     pub n2: f64,
 }
@@ -55,16 +56,16 @@ impl Intersection {
         intersections: Option<&Vec<Intersection>>,
     ) -> Computations {
         let point = ray.position(self.t);
-        let eye_vector = -ray.direction.clone();
+        let eye_vector = -ray.direction;
         let mut normal_vector = self.object.normal_at(&point);
         let inside = normal_vector.dot(&eye_vector) < 0.0;
         if inside {
             normal_vector = -normal_vector;
         }
-        let delta = &normal_vector * (f64::EPSILON * 2.);
-        let over_point = &point + &delta;
-        let under_point = &point - &delta;
-        let reflect_vector = ray.direction.reflect(&normal_vector);
+        let delta = normal_vector * 1e-10f64;
+        let over_point = point + delta;
+        let under_point = point - delta;
+        let reflect_vector = nalgebra_glm::reflect_vec(&ray.direction, &normal_vector);
         let mut containers: Vec<Box<dyn Shape>> = vec![];
         let mut n1 = 1.;
         let mut n2 = self.object.material().refractive_index;
@@ -134,8 +135,9 @@ impl Computations {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Matrix, Plane, Ray, Sphere, Transform, Tuple};
+    use crate::{Plane, Ray, Sphere, Transform};
     use approx::assert_relative_eq;
+    use nalgebra_glm::{scale, translate, vec3, vec4, DMat4};
     use std::f64::consts::SQRT_2;
 
     use super::*;
@@ -190,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_always_lowest_nonnegative_intersection() {
+    fn hit_always_lowest_non_negative_intersection() {
         let shape = Box::new(Sphere::new(0));
         let i1 = Intersection::new(5.0, shape.clone());
         let i2 = Intersection::new(7.0, shape.clone());
@@ -203,69 +205,66 @@ mod tests {
 
     #[test]
     fn precomputing_state_of_intersection() {
-        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
+        let ray = Ray::new(vec4(0., 0., -5., 1.), vec4(0., 0., 1., 0.));
         let shape = Sphere::new(0);
         let intersection = Intersection::new(4., Box::new(shape.clone()));
         let comps = intersection.prepare_computations(&ray, None);
         assert_eq!(comps.t, intersection.t);
         assert!(<dyn Shape>::eq(&shape, &intersection.object));
         assert!(<dyn Shape>::eq(&shape, &comps.object));
-        assert_eq!(comps.point, Tuple::point(0., 0., -1.));
-        assert_eq!(comps.eye_vector, Tuple::vector(0., 0., -1.));
-        assert_eq!(comps.normal_vector, Tuple::vector(0., 0., -1.));
+        assert_eq!(comps.point, vec4(0., 0., -1., 1.));
+        assert_eq!(comps.eye_vector, vec4(0., 0., -1., 0.));
+        assert_eq!(comps.normal_vector, vec4(0., 0., -1., 0.));
         assert!(!comps.inside);
     }
 
     #[test]
     fn hit_when_intersection_inside() {
-        let ray = Ray::new(Tuple::point(0., 0., 0.), Tuple::vector(0., 0., 1.));
+        let ray = Ray::new(vec4(0., 0., 0., 1.), vec4(0., 0., 1., 0.));
         let shape = Box::new(Sphere::new(0));
         let intersection = Intersection::new(1., shape);
         let comps = intersection.prepare_computations(&ray, None);
-        assert_eq!(comps.point, Tuple::point(0., 0., 1.));
-        assert_eq!(comps.eye_vector, Tuple::vector(0., 0., -1.));
-        assert_eq!(comps.normal_vector, Tuple::vector(0., 0., -1.));
+        assert_eq!(comps.point, vec4(0., 0., 1., 1.));
+        assert_eq!(comps.eye_vector, vec4(0., 0., -1., 0.));
+        assert_eq!(comps.normal_vector, vec4(0., 0., -1., 0.));
         assert!(comps.inside);
     }
 
     #[test]
     fn hit_should_offset_point() {
-        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
+        let ray = Ray::new(vec4(0., 0., -5., 1.), vec4(0., 0., 1., 0.));
         let mut shape = Sphere::new(0);
-        *shape.transform_mut() = Matrix::translation(0., 0., 1.);
+        *shape.transform_mut() = translate(&DMat4::identity(), &vec3(0., 0., 1.));
         let intersection = Intersection::new(5., Box::new(shape));
         let comps = intersection.prepare_computations(&ray, None);
-        assert!(comps.over_point.z() < -f64::EPSILON / 2.);
-        assert!(comps.point.z() > comps.over_point.z());
+        assert!(comps.over_point.z < -f64::EPSILON / 2.);
+        assert!(comps.point.z > comps.over_point.z);
     }
 
     #[test]
     fn precomputing_reflection_vector() {
         let shape = Plane::new(0);
         let ray = Ray::new(
-            Tuple::point(0., 1., -1.),
-            Tuple::vector(0., -SQRT_2 / 2., SQRT_2 / 2.),
+            vec4(0., 1., -1., 1.),
+            vec4(0., -SQRT_2 / 2., SQRT_2 / 2., 0.),
         );
         let intersection = Intersection::new(SQRT_2, Box::new(shape));
         let comps = intersection.prepare_computations(&ray, None);
-        assert_eq!(
-            comps.reflect_vector,
-            Tuple::vector(0., SQRT_2 / 2., SQRT_2 / 2.)
-        );
+        assert_eq!(comps.reflect_vector, vec4(0., SQRT_2 / 2., SQRT_2 / 2., 0.));
     }
 
     #[test]
     fn finding_n1_and_n2_at_various_intersections() {
         let mut a = Box::new(Sphere::glass(0));
-        *a.transform_mut() = Matrix::scaling(2., 2., 2.);
+        *a.transform_mut() = scale(&DMat4::identity(), &vec3(2., 2., 2.));
         a.material_mut().refractive_index = 1.5;
         let mut b = Box::new(Sphere::glass(1));
-        *b.transform_mut() = Matrix::translation(0., 0., -0.25);
+        *b.transform_mut() = translate(&DMat4::identity(), &vec3(0., 0., -0.25));
         b.material_mut().refractive_index = 2.;
         let mut c = Box::new(Sphere::glass(2));
-        *c.transform_mut() = Matrix::translation(0., 0., 0.25);
+        *c.transform_mut() = translate(&DMat4::identity(), &vec3(0., 0., 0.25));
         c.material_mut().refractive_index = 2.5;
-        let ray = Ray::new(Tuple::point(0., 0., -4.), Tuple::vector(0., 0., 1.));
+        let ray = Ray::new(vec4(0., 0., -4., 1.), vec4(0., 0., 1., 0.));
         let intersections = vec![
             Intersection::new(2., a.clone()),
             Intersection::new(2.75, b.clone()),
@@ -286,19 +285,19 @@ mod tests {
     #[test]
     fn under_point_is_offset_below_surface() {
         let mut shape = Sphere::glass(0);
-        *shape.transform_mut() = Matrix::translation(0., 0., 1.);
-        let ray = Ray::new(Tuple::point(0., 0., -5.), Tuple::vector(0., 0., 1.));
+        *shape.transform_mut() = translate(&DMat4::identity(), &vec3(0., 0., 1.));
+        let ray = Ray::new(vec4(0., 0., -5., 1.), vec4(0., 0., 1., 0.));
         let intersection = Intersection::new(5., Box::new(shape));
         let intersections = vec![intersection.clone()];
         let comps = intersection.prepare_computations(&ray, Some(&intersections));
-        assert!(comps.under_point.z() > f64::EPSILON / 2.);
-        assert!(comps.point.z() < comps.under_point.z());
+        assert!(comps.under_point.z > f64::EPSILON / 2.);
+        assert!(comps.point.z < comps.under_point.z);
     }
 
     #[test]
     fn schlick_approximation_under_total_reflection() {
         let shape = Box::new(Sphere::glass(0));
-        let ray = Ray::new(Tuple::point(0., 0., SQRT_2 / 2.), Tuple::vector(0., 1., 0.));
+        let ray = Ray::new(vec4(0., 0., SQRT_2 / 2., 1.), vec4(0., 1., 0., 0.));
         let intersections = vec![
             Intersection::new(-SQRT_2 / 2., shape.clone()),
             Intersection::new(SQRT_2 / 2., shape),
@@ -311,7 +310,7 @@ mod tests {
     #[test]
     fn schlick_approximation_with_perpendicular_viewing_angle() {
         let shape = Box::new(Sphere::glass(0));
-        let ray = Ray::new(Tuple::point(0., 0., 0.), Tuple::vector(0., 1., 0.));
+        let ray = Ray::new(vec4(0., 0., 0., 1.), vec4(0., 1., 0., 0.));
         let intersections = vec![
             Intersection::new(-1., shape.clone()),
             Intersection::new(1., shape),
@@ -324,7 +323,7 @@ mod tests {
     #[test]
     fn schlick_approximation_with_small_angle_and_n2_greater_than_n1() {
         let shape = Box::new(Sphere::glass(0));
-        let ray = Ray::new(Tuple::point(0., 0.99, -2.), Tuple::vector(0., 0., 1.));
+        let ray = Ray::new(vec4(0., 0.99, -2., 1.), vec4(0., 0., 1., 0.));
         let intersections = vec![Intersection::new(1.8589, shape)];
         let comps = intersections[0].prepare_computations(&ray, Some(&intersections));
         let reflectance = comps.schlick();

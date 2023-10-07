@@ -1,8 +1,9 @@
-use crate::{Intersection, Material, Matrix, Ray, Shape, Transform, Tuple};
+use crate::{Intersection, Material, Ray, Shape, Transform};
+use nalgebra_glm::{vec4, DMat4, DVec4};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Cube {
-    transform: Matrix,
+    transform: DMat4,
     material: Material,
     id: u32,
 }
@@ -10,29 +11,29 @@ pub struct Cube {
 impl Cube {
     pub fn new(id: u32) -> Cube {
         Cube {
-            transform: Matrix::identity(4),
+            transform: DMat4::identity(),
             material: Material::default(),
             id,
         }
     }
 
     fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
-        let tmin_numerator = -1.0 - origin;
-        let tmax_numerator = 1.0 - origin;
+        let t_min_numerator = -1.0 - origin;
+        let t_max_numerator = 1.0 - origin;
 
-        let (tmin, tmax) = if direction.abs() >= f64::EPSILON {
-            (tmin_numerator / direction, tmax_numerator / direction)
+        let (t_min, t_max) = if direction.abs() >= f64::EPSILON {
+            (t_min_numerator / direction, t_max_numerator / direction)
         } else {
             (
-                tmin_numerator * f64::INFINITY,
-                tmax_numerator * f64::INFINITY,
+                t_min_numerator * f64::INFINITY,
+                t_max_numerator * f64::INFINITY,
             )
         };
 
-        if tmin > tmax {
-            (tmax, tmin)
+        if t_min > t_max {
+            (t_max, t_min)
         } else {
-            (tmin, tmax)
+            (t_min, t_max)
         }
     }
 }
@@ -45,28 +46,28 @@ impl Shape for Cube {
         &mut self.material
     }
     fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
-        let (xtmin, xtmax) = Self::check_axis(ray.origin.x(), ray.direction.x());
-        let (ytmin, ytmax) = Self::check_axis(ray.origin.y(), ray.direction.y());
-        let (ztmin, ztmax) = Self::check_axis(ray.origin.z(), ray.direction.z());
-        let tmin = xtmin.max(ytmin).max(ztmin);
-        let tmax = xtmax.min(ytmax).min(ztmax);
-        if tmin > tmax {
+        let (x_min, x_max) = Self::check_axis(ray.origin.x, ray.direction.x);
+        let (y_min, y_max) = Self::check_axis(ray.origin.y, ray.direction.y);
+        let (z_min, z_max) = Self::check_axis(ray.origin.z, ray.direction.z);
+        let t_min = x_min.max(y_min).max(z_min);
+        let t_max = x_max.min(y_max).min(z_max);
+        if t_min > t_max {
             return vec![];
         }
         let shape = Box::new(self.clone());
         vec![
-            Intersection::new(tmin, shape.clone()),
-            Intersection::new(tmax, shape),
+            Intersection::new(t_min, shape.clone()),
+            Intersection::new(t_max, shape),
         ]
     }
-    fn local_normal_at(&self, point: &Tuple) -> Tuple {
-        let maxc = point.x().abs().max(point.y().abs()).max(point.z().abs());
-        if maxc == point.x().abs() {
-            Tuple::vector(point.x(), 0.0, 0.0)
-        } else if maxc == point.y().abs() {
-            Tuple::vector(0.0, point.y(), 0.0)
+    fn local_normal_at(&self, point: &DVec4) -> DVec4 {
+        let max = point.x.abs().max(point.y.abs()).max(point.z.abs());
+        if max == point.x.abs() {
+            vec4(point.x, 0.0, 0.0, 0.)
+        } else if max == point.y.abs() {
+            vec4(0.0, point.y, 0.0, 0.)
         } else {
-            Tuple::vector(0.0, 0.0, point.z())
+            vec4(0.0, 0.0, point.z, 0.)
         }
     }
     fn id(&self) -> u32 {
@@ -75,10 +76,10 @@ impl Shape for Cube {
 }
 
 impl Transform for Cube {
-    fn transform(&self) -> &Matrix {
+    fn transform(&self) -> &DMat4 {
         &self.transform
     }
-    fn transform_mut(&mut self) -> &mut Matrix {
+    fn transform_mut(&mut self) -> &mut DMat4 {
         &mut self.transform
     }
 }
@@ -86,11 +87,12 @@ impl Transform for Cube {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nalgebra_glm::vec4;
 
     #[test]
     fn ray_intersects_cube_pos_x() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(5.0, 0.5, 0.0), Tuple::vector(-1.0, 0.0, 0.0));
+        let ray = Ray::new(vec4(5.0, 0.5, 0.0, 1.), vec4(-1.0, 0.0, 0.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 2);
         assert_eq!(intersection[0].t, 4.0);
@@ -100,7 +102,7 @@ mod tests {
     #[test]
     fn ray_intersects_cube_neg_x() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(-5.0, 0.5, 0.0), Tuple::vector(1.0, 0.0, 0.0));
+        let ray = Ray::new(vec4(-5.0, 0.5, 0.0, 1.), vec4(1.0, 0.0, 0.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 2);
         assert_eq!(intersection[0].t, 4.0);
@@ -110,7 +112,7 @@ mod tests {
     #[test]
     fn ray_intersects_cube_pos_y() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(0.5, 5.0, 0.0), Tuple::vector(0.0, -1.0, 0.0));
+        let ray = Ray::new(vec4(0.5, 5.0, 0.0, 1.), vec4(0.0, -1.0, 0.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 2);
         assert_eq!(intersection[0].t, 4.0);
@@ -120,7 +122,7 @@ mod tests {
     #[test]
     fn ray_intersects_cube_neg_y() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(0.5, -5.0, 0.0), Tuple::vector(0.0, 1.0, 0.0));
+        let ray = Ray::new(vec4(0.5, -5.0, 0.0, 1.), vec4(0.0, 1.0, 0.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 2);
         assert_eq!(intersection[0].t, 4.0);
@@ -130,7 +132,7 @@ mod tests {
     #[test]
     fn ray_intersects_cube_pos_z() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(0.5, 0.0, 5.0), Tuple::vector(0.0, 0.0, -1.0));
+        let ray = Ray::new(vec4(0.5, 0.0, 5.0, 1.), vec4(0.0, 0.0, -1.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 2);
         assert_eq!(intersection[0].t, 4.0);
@@ -140,7 +142,7 @@ mod tests {
     #[test]
     fn ray_intersects_cube_neg_z() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(0.5, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.5, 0.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 2);
         assert_eq!(intersection[0].t, 4.0);
@@ -150,7 +152,7 @@ mod tests {
     #[test]
     fn ray_intersects_cube_inside() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(0.0, 0.5, 0.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 0.5, 0.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 2);
         assert_eq!(intersection[0].t, -1.0);
@@ -160,10 +162,7 @@ mod tests {
     #[test]
     fn ray_misses_cube_a() {
         let cube = Cube::new(0);
-        let ray = Ray::new(
-            Tuple::point(-2.0, 0.0, 0.0),
-            Tuple::vector(0.2673, 0.5345, 0.8018),
-        );
+        let ray = Ray::new(vec4(-2.0, 0.0, 0.0, 1.), vec4(0.2673, 0.5345, 0.8018, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 0);
     }
@@ -171,10 +170,7 @@ mod tests {
     #[test]
     fn ray_misses_cube_b() {
         let cube = Cube::new(0);
-        let ray = Ray::new(
-            Tuple::point(0.0, -2.0, 0.0),
-            Tuple::vector(0.8018, 0.2673, 0.5345),
-        );
+        let ray = Ray::new(vec4(0.0, -2.0, 0.0, 1.), vec4(0.8018, 0.2673, 0.5345, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 0);
     }
@@ -182,10 +178,7 @@ mod tests {
     #[test]
     fn ray_misses_cube_c() {
         let cube = Cube::new(0);
-        let ray = Ray::new(
-            Tuple::point(0.0, 0.0, -2.0),
-            Tuple::vector(0.5345, 0.8018, 0.2673),
-        );
+        let ray = Ray::new(vec4(0.0, 0.0, -2.0, 1.), vec4(0.5345, 0.8018, 0.2673, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 0);
     }
@@ -193,7 +186,7 @@ mod tests {
     #[test]
     fn ray_misses_cube_d() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(2.0, 0.0, 2.0), Tuple::vector(0.0, 0.0, -1.0));
+        let ray = Ray::new(vec4(2.0, 0.0, 2.0, 1.), vec4(0.0, 0.0, -1.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 0);
     }
@@ -201,7 +194,7 @@ mod tests {
     #[test]
     fn ray_misses_cube_e() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(0.0, 2.0, 2.0), Tuple::vector(0.0, -1.0, 0.0));
+        let ray = Ray::new(vec4(0.0, 2.0, 2.0, 1.), vec4(0.0, -1.0, 0.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 0);
     }
@@ -209,7 +202,7 @@ mod tests {
     #[test]
     fn ray_misses_cube_f() {
         let cube = Cube::new(0);
-        let ray = Ray::new(Tuple::point(2.0, 2.0, 0.0), Tuple::vector(-1.0, 0.0, 0.0));
+        let ray = Ray::new(vec4(2.0, 2.0, 0.0, 1.), vec4(-1.0, 0.0, 0.0, 0.));
         let intersection = cube.local_intersect(&ray);
         assert_eq!(intersection.len(), 0);
     }
@@ -217,64 +210,64 @@ mod tests {
     #[test]
     fn normal_on_surface_of_cube_pos_x() {
         let cube = Cube::new(0);
-        let point = Tuple::point(1.0, 0.5, -0.8);
+        let point = vec4(1.0, 0.5, -0.8, 1.);
         let normal = cube.local_normal_at(&point);
-        assert_eq!(normal, Tuple::vector(1.0, 0.0, 0.0));
+        assert_eq!(normal, vec4(1.0, 0.0, 0.0, 0.));
     }
 
     #[test]
     fn normal_on_surface_of_cube_neg_x() {
         let cube = Cube::new(0);
-        let point = Tuple::point(-1.0, -0.2, 0.9);
+        let point = vec4(-1.0, -0.2, 0.9, 1.);
         let normal = cube.local_normal_at(&point);
-        assert_eq!(normal, Tuple::vector(-1.0, 0.0, 0.0));
+        assert_eq!(normal, vec4(-1.0, 0.0, 0.0, 0.));
     }
 
     #[test]
     fn normal_on_surface_of_cube_pos_y() {
         let cube = Cube::new(0);
-        let point = Tuple::point(-0.4, 1.0, -0.1);
+        let point = vec4(-0.4, 1.0, -0.1, 1.);
         let normal = cube.local_normal_at(&point);
-        assert_eq!(normal, Tuple::vector(0.0, 1.0, 0.0));
+        assert_eq!(normal, vec4(0.0, 1.0, 0.0, 0.));
     }
 
     #[test]
     fn normal_on_surface_of_cube_neg_y() {
         let cube = Cube::new(0);
-        let point = Tuple::point(0.3, -1.0, -0.7);
+        let point = vec4(0.3, -1.0, -0.7, 1.);
         let normal = cube.local_normal_at(&point);
-        assert_eq!(normal, Tuple::vector(0.0, -1.0, 0.0));
+        assert_eq!(normal, vec4(0.0, -1.0, 0.0, 0.));
     }
 
     #[test]
     fn normal_on_surface_of_cube_pos_z() {
         let cube = Cube::new(0);
-        let point = Tuple::point(-0.6, 0.3, 1.0);
+        let point = vec4(-0.6, 0.3, 1.0, 1.);
         let normal = cube.local_normal_at(&point);
-        assert_eq!(normal, Tuple::vector(0.0, 0.0, 1.0));
+        assert_eq!(normal, vec4(0.0, 0.0, 1.0, 0.));
     }
 
     #[test]
     fn normal_on_surface_of_cube_neg_z() {
         let cube = Cube::new(0);
-        let point = Tuple::point(0.4, 0.4, -1.0);
+        let point = vec4(0.4, 0.4, -1.0, 1.);
         let normal = cube.local_normal_at(&point);
-        assert_eq!(normal, Tuple::vector(0.0, 0.0, -1.0));
+        assert_eq!(normal, vec4(0.0, 0.0, -1.0, 0.));
     }
 
     #[test]
     fn normal_on_corner_of_cube_pos() {
         let cube = Cube::new(0);
-        let point = Tuple::point(1.0, 1.0, 1.0);
+        let point = vec4(1.0, 1.0, 1.0, 1.);
         let normal = cube.local_normal_at(&point);
-        assert_eq!(normal, Tuple::vector(1.0, 0.0, 0.0));
+        assert_eq!(normal, vec4(1.0, 0.0, 0.0, 0.));
     }
 
     #[test]
     fn normal_on_corner_of_cube_neg() {
         let cube = Cube::new(0);
-        let point = Tuple::point(-1.0, -1.0, -1.0);
+        let point = vec4(-1.0, -1.0, -1.0, 1.);
         let normal = cube.local_normal_at(&point);
-        assert_eq!(normal, Tuple::vector(-1.0, 0.0, 0.0));
+        assert_eq!(normal, vec4(-1.0, 0.0, 0.0, 0.));
     }
 }

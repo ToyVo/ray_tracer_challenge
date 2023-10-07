@@ -1,8 +1,9 @@
-use crate::{Intersection, Material, Matrix, Ray, Shape, Transform, Tuple};
+use crate::{Intersection, Material, Ray, Shape, Transform};
+use nalgebra_glm::{vec4, DMat4, DVec4};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Cylinder {
-    transform: Matrix,
+    transform: DMat4,
     material: Material,
     id: u32,
     maximum: f64,
@@ -13,7 +14,7 @@ pub struct Cylinder {
 impl Cylinder {
     pub fn new(id: u32) -> Cylinder {
         Cylinder {
-            transform: Matrix::identity(4),
+            transform: DMat4::identity(),
             material: Material::default(),
             id,
             maximum: f64::INFINITY,
@@ -23,23 +24,23 @@ impl Cylinder {
     }
 
     fn check_caps(ray: &Ray, t: f64) -> bool {
-        let x = ray.origin.x() + t * ray.direction.x();
-        let z = ray.origin.z() + t * ray.direction.z();
+        let x = ray.origin.x + t * ray.direction.x;
+        let z = ray.origin.z + t * ray.direction.z;
         (x.powi(2) + z.powi(2)) <= 1.0
     }
 
     fn intersect_caps(&self, ray: &Ray) -> Vec<Intersection> {
         let mut intersections = vec![];
-        if !self.closed || ray.direction.y().abs() < f64::EPSILON {
+        if !self.closed || ray.direction.y.abs() < f64::EPSILON {
             return intersections;
         }
 
-        let t = (self.minimum - ray.origin.y()) / ray.direction.y();
+        let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Self::check_caps(ray, t) {
             intersections.push(Intersection::new(t, Box::new(self.clone())));
         }
 
-        let t = (self.maximum - ray.origin.y()) / ray.direction.y();
+        let t = (self.maximum - ray.origin.y) / ray.direction.y;
         if Self::check_caps(ray, t) {
             intersections.push(Intersection::new(t, Box::new(self.clone())));
         }
@@ -57,9 +58,9 @@ impl Shape for Cylinder {
     }
     fn local_intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let mut intersections = vec![];
-        let a = ray.direction.x().powi(2) + ray.direction.z().powi(2);
-        let b = 2.0 * ray.origin.x() * ray.direction.x() + 2.0 * ray.origin.z() * ray.direction.z();
-        let c = ray.origin.x().powi(2) + ray.origin.z().powi(2) - 1.0;
+        let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
+        let b = 2.0 * ray.origin.x * ray.direction.x + 2.0 * ray.origin.z * ray.direction.z;
+        let c = ray.origin.x.powi(2) + ray.origin.z.powi(2) - 1.0;
 
         if a.abs() >= f64::EPSILON {
             let discriminant = b.powi(2) - 4.0 * a * c;
@@ -73,12 +74,12 @@ impl Shape for Cylinder {
             let (t0, t1) = if t0 > t1 { (t1, t0) } else { (t0, t1) };
             let shape = Box::new(self.clone());
 
-            let y0 = ray.origin.y() + t0 * ray.direction.y();
+            let y0 = ray.origin.y + t0 * ray.direction.y;
             if self.minimum < y0 && y0 < self.maximum {
                 intersections.push(Intersection::new(t0, shape.clone()));
             }
 
-            let y1 = ray.origin.y() + t1 * ray.direction.y();
+            let y1 = ray.origin.y + t1 * ray.direction.y;
             if self.minimum < y1 && y1 < self.maximum {
                 intersections.push(Intersection::new(t1, shape));
             }
@@ -88,14 +89,14 @@ impl Shape for Cylinder {
 
         intersections
     }
-    fn local_normal_at(&self, point: &Tuple) -> Tuple {
-        let dist = point.x().powi(2) + point.z().powi(2);
-        if dist < 1.0 && point.y() >= self.maximum - f64::EPSILON {
-            Tuple::vector(0.0, 1.0, 0.0)
-        } else if dist < 1.0 && point.y() <= self.minimum + f64::EPSILON {
-            Tuple::vector(0.0, -1.0, 0.0)
+    fn local_normal_at(&self, point: &DVec4) -> DVec4 {
+        let dist = point.x.powi(2) + point.z.powi(2);
+        if dist < 1.0 && point.y >= self.maximum - f64::EPSILON {
+            vec4(0.0, 1.0, 0.0, 0.)
+        } else if dist < 1.0 && point.y <= self.minimum + f64::EPSILON {
+            vec4(0.0, -1.0, 0.0, 0.)
         } else {
-            Tuple::vector(point.x(), 0.0, point.z())
+            vec4(point.x, 0.0, point.z, 0.)
         }
     }
     fn id(&self) -> u32 {
@@ -104,10 +105,10 @@ impl Shape for Cylinder {
 }
 
 impl Transform for Cylinder {
-    fn transform(&self) -> &Matrix {
+    fn transform(&self) -> &DMat4 {
         &self.transform
     }
-    fn transform_mut(&mut self) -> &mut Matrix {
+    fn transform_mut(&mut self) -> &mut DMat4 {
         &mut self.transform
     }
 }
@@ -120,10 +121,7 @@ mod tests {
     #[test]
     fn ray_misses_cylinder_a() {
         let cylinder = Cylinder::new(0);
-        let ray = Ray::new(
-            Tuple::point(1.0, 0.0, 0.0),
-            Tuple::vector(0.0, 1.0, 0.0).normalize(),
-        );
+        let ray = Ray::new(vec4(1.0, 0.0, 0.0, 1.), vec4(0.0, 1.0, 0.0, 0.).normalize());
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -131,10 +129,7 @@ mod tests {
     #[test]
     fn ray_misses_cylinder_b() {
         let cylinder = Cylinder::new(0);
-        let ray = Ray::new(
-            Tuple::point(0.0, 0.0, 0.0),
-            Tuple::vector(0.0, 1.0, 0.0).normalize(),
-        );
+        let ray = Ray::new(vec4(0.0, 0.0, 0.0, 1.), vec4(0.0, 1.0, 0.0, 0.).normalize());
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -143,8 +138,8 @@ mod tests {
     fn ray_misses_cylinder_c() {
         let cylinder = Cylinder::new(0);
         let ray = Ray::new(
-            Tuple::point(0.0, 0.0, -5.0),
-            Tuple::vector(1.0, 1.0, 1.0).normalize(),
+            vec4(0.0, 0.0, -5.0, 1.),
+            vec4(1.0, 1.0, 1.0, 0.).normalize(),
         );
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
@@ -154,8 +149,8 @@ mod tests {
     fn ray_hits_cylinder_a() {
         let cylinder = Cylinder::new(0);
         let ray = Ray::new(
-            Tuple::point(1.0, 0.0, -5.0),
-            Tuple::vector(0.0, 0.0, 1.0).normalize(),
+            vec4(1.0, 0.0, -5.0, 1.),
+            vec4(0.0, 0.0, 1.0, 0.).normalize(),
         );
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
@@ -167,8 +162,8 @@ mod tests {
     fn ray_hits_cylinder_b() {
         let cylinder = Cylinder::new(0);
         let ray = Ray::new(
-            Tuple::point(0.0, 0.0, -5.0),
-            Tuple::vector(0.0, 0.0, 1.0).normalize(),
+            vec4(0.0, 0.0, -5.0, 1.),
+            vec4(0.0, 0.0, 1.0, 0.).normalize(),
         );
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
@@ -180,8 +175,8 @@ mod tests {
     fn ray_hits_cylinder_c() {
         let cylinder = Cylinder::new(0);
         let ray = Ray::new(
-            Tuple::point(0.5, 0.0, -5.0),
-            Tuple::vector(0.1, 1.0, 1.0).normalize(),
+            vec4(0.5, 0.0, -5.0, 1.),
+            vec4(0.1, 1.0, 1.0, 0.).normalize(),
         );
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
@@ -192,29 +187,29 @@ mod tests {
     #[test]
     fn normal_vector_on_cylinder_a() {
         let cylinder = Cylinder::new(0);
-        let normal = cylinder.local_normal_at(&Tuple::point(1.0, 0.0, 0.0));
-        assert_eq!(normal, Tuple::vector(1.0, 0.0, 0.0));
+        let normal = cylinder.local_normal_at(&vec4(1.0, 0.0, 0.0, 1.));
+        assert_eq!(normal, vec4(1.0, 0.0, 0.0, 0.));
     }
 
     #[test]
     fn normal_vector_on_cylinder_b() {
         let cylinder = Cylinder::new(0);
-        let normal = cylinder.local_normal_at(&Tuple::point(0.0, 5.0, -1.0));
-        assert_eq!(normal, Tuple::vector(0.0, 0.0, -1.0));
+        let normal = cylinder.local_normal_at(&vec4(0.0, 5.0, -1.0, 1.));
+        assert_eq!(normal, vec4(0.0, 0.0, -1.0, 0.));
     }
 
     #[test]
     fn normal_vector_on_cylinder_c() {
         let cylinder = Cylinder::new(0);
-        let normal = cylinder.local_normal_at(&Tuple::point(0.0, -2.0, 1.0));
-        assert_eq!(normal, Tuple::vector(0.0, 0.0, 1.0));
+        let normal = cylinder.local_normal_at(&vec4(0.0, -2.0, 1.0, 1.));
+        assert_eq!(normal, vec4(0.0, 0.0, 1.0, 0.));
     }
 
     #[test]
     fn normal_vector_on_cylinder_d() {
         let cylinder = Cylinder::new(0);
-        let normal = cylinder.local_normal_at(&Tuple::point(-1.0, 1.0, 0.0));
-        assert_eq!(normal, Tuple::vector(-1.0, 0.0, 0.0));
+        let normal = cylinder.local_normal_at(&vec4(-1.0, 1.0, 0.0, 1.));
+        assert_eq!(normal, vec4(-1.0, 0.0, 0.0, 0.));
     }
 
     #[test]
@@ -229,7 +224,7 @@ mod tests {
         let mut cylinder = Cylinder::new(0);
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
-        let ray = Ray::new(Tuple::point(0.0, 1.5, 0.0), Tuple::vector(0.1, 1.0, 0.0));
+        let ray = Ray::new(vec4(0.0, 1.5, 0.0, 1.), vec4(0.1, 1.0, 0.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -239,7 +234,7 @@ mod tests {
         let mut cylinder = Cylinder::new(0);
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
-        let ray = Ray::new(Tuple::point(0.0, 3.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 3.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -249,7 +244,7 @@ mod tests {
         let mut cylinder = Cylinder::new(0);
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 0.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -259,7 +254,7 @@ mod tests {
         let mut cylinder = Cylinder::new(0);
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
-        let ray = Ray::new(Tuple::point(0.0, 2.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 2.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -269,7 +264,7 @@ mod tests {
         let mut cylinder = Cylinder::new(0);
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
-        let ray = Ray::new(Tuple::point(0.0, 1.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 1.0, -5.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 0);
     }
@@ -279,7 +274,7 @@ mod tests {
         let mut cylinder = Cylinder::new(0);
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
-        let ray = Ray::new(Tuple::point(0.0, 1.5, -2.0), Tuple::vector(0.0, 0.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 1.5, -2.0, 1.), vec4(0.0, 0.0, 1.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 1.0);
@@ -298,7 +293,7 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let ray = Ray::new(Tuple::point(0.0, 3.0, 0.0), Tuple::vector(0.0, -1.0, 0.0));
+        let ray = Ray::new(vec4(0.0, 3.0, 0.0, 1.), vec4(0.0, -1.0, 0.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 2.0);
@@ -313,7 +308,7 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let ray = Ray::new(Tuple::point(0.0, 3.0, -2.0), Tuple::vector(0.0, -1.0, 2.0));
+        let ray = Ray::new(vec4(0.0, 3.0, -2.0, 1.), vec4(0.0, -1.0, 2.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 1.5);
@@ -328,7 +323,7 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let ray = Ray::new(Tuple::point(0.0, 4.0, -2.0), Tuple::vector(0.0, -1.0, 1.0));
+        let ray = Ray::new(vec4(0.0, 4.0, -2.0, 1.), vec4(0.0, -1.0, 1.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 3.0);
@@ -343,7 +338,7 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let ray = Ray::new(Tuple::point(0.0, 0.0, -2.0), Tuple::vector(0.0, 1.0, 2.0));
+        let ray = Ray::new(vec4(0.0, 0.0, -2.0, 1.), vec4(0.0, 1.0, 2.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 1.5);
@@ -358,7 +353,7 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let ray = Ray::new(Tuple::point(0.0, -1.0, -2.0), Tuple::vector(0.0, 1.0, 1.0));
+        let ray = Ray::new(vec4(0.0, -1.0, -2.0, 1.), vec4(0.0, 1.0, 1.0, 0.));
         let intersections = cylinder.local_intersect(&ray);
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].t, 2.0);
@@ -373,8 +368,8 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let normal = cylinder.local_normal_at(&Tuple::point(0.0, 1.0, 0.0));
-        assert_eq!(normal, Tuple::vector(0.0, -1.0, 0.0));
+        let normal = cylinder.local_normal_at(&vec4(0.0, 1.0, 0.0, 1.));
+        assert_eq!(normal, vec4(0.0, -1.0, 0.0, 0.));
     }
 
     #[test]
@@ -383,8 +378,8 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let normal = cylinder.local_normal_at(&Tuple::point(0.5, 1.0, 0.0));
-        assert_eq!(normal, Tuple::vector(0.0, -1.0, 0.0));
+        let normal = cylinder.local_normal_at(&vec4(0.5, 1.0, 0.0, 1.));
+        assert_eq!(normal, vec4(0.0, -1.0, 0.0, 0.));
     }
 
     #[test]
@@ -393,8 +388,8 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let normal = cylinder.local_normal_at(&Tuple::point(0.0, 1.0, 0.5));
-        assert_eq!(normal, Tuple::vector(0.0, -1.0, 0.0));
+        let normal = cylinder.local_normal_at(&vec4(0.0, 1.0, 0.5, 1.));
+        assert_eq!(normal, vec4(0.0, -1.0, 0.0, 0.));
     }
 
     #[test]
@@ -403,8 +398,8 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let normal = cylinder.local_normal_at(&Tuple::point(0.0, 2.0, 0.0));
-        assert_eq!(normal, Tuple::vector(0.0, 1.0, 0.0));
+        let normal = cylinder.local_normal_at(&vec4(0.0, 2.0, 0.0, 1.));
+        assert_eq!(normal, vec4(0.0, 1.0, 0.0, 0.));
     }
 
     #[test]
@@ -413,8 +408,8 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let normal = cylinder.local_normal_at(&Tuple::point(0.5, 2.0, 0.0));
-        assert_eq!(normal, Tuple::vector(0.0, 1.0, 0.0));
+        let normal = cylinder.local_normal_at(&vec4(0.5, 2.0, 0.0, 1.));
+        assert_eq!(normal, vec4(0.0, 1.0, 0.0, 0.));
     }
 
     #[test]
@@ -423,7 +418,7 @@ mod tests {
         cylinder.minimum = 1.0;
         cylinder.maximum = 2.0;
         cylinder.closed = true;
-        let normal = cylinder.local_normal_at(&Tuple::point(0.0, 2.0, 0.5));
-        assert_eq!(normal, Tuple::vector(0.0, 1.0, 0.0));
+        let normal = cylinder.local_normal_at(&vec4(0.0, 2.0, 0.5, 1.));
+        assert_eq!(normal, vec4(0.0, 1.0, 0.0, 0.));
     }
 }
