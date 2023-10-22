@@ -1,37 +1,27 @@
 {
   description = "my project description";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  inputs.rust-overlay.url = "github:oxalica/rust-overlay";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    utils.url = "github:numtide/flake-utils";
+  };
 
-  outputs = { self, nixpkgs, rust-overlay }:
+  outputs = { self, nixpkgs, utils }: utils.lib.eachDefaultSystem (system:
     let
-      inherit (nixpkgs) lib;
-      forAllSystems = lib.genAttrs lib.systems.flakeExposed;
+      pkgs = import nixpkgs { inherit system; };
     in
     {
-      devShells = forAllSystems (system:
-        let
-          pkgs = import nixpkgs { inherit system; overlays = [ rust-overlay.overlays.default ]; };
-        in
-        {
-          default = pkgs.mkShell {
-            packages = with pkgs; [
-              cargo
-              cargo-watch
-              clippy
-              rustfmt
-              rust-analyzer
-              wasm-pack
-              bun
-              trunk
-              (rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
-                extensions = [ "rust-src" ];
-                targets = [ "wasm32-unknown-unknown" ];
-              }))
-            ];
-          };
-        }
-      );
-    };
+      devShells.default = pkgs.mkShell {
+        packages = with pkgs; [
+          rustup
+          cargo-watch
+          wasm-pack
+          bun
+          trunk
+        ];
+        shellHook = ''
+          rustup target add wasm32-unknown-unknown
+        '';
+      };
+    });
 }
