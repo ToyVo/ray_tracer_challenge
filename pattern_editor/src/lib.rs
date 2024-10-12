@@ -7,14 +7,6 @@ use ray_tracer::{
 use nalgebra_glm::{vec3, vec4, DMat4, rotate_y, scale, translate};
 use wasm_bindgen::prelude::*;
 
-// When the `wee_alloc` feature is enabled, this uses `wee_alloc` as the global
-// allocator.
-//
-// If you don't want to use `wee_alloc`, you can safely delete this.
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 const CELL_SIZE: u32 = 5;
 const DEAD_COLOR: u32 = 0xFFFFFFFF;
 const ALIVE_COLOR: u32 = 0xFF000000;
