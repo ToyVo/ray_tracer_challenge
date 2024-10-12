@@ -1,6 +1,4 @@
 {
-  description = "discord_bot, A Rust web server including a NixOS module";
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts = {
