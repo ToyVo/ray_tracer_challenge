@@ -3,5 +3,4 @@ resolver = "2"
 
 members = [
     "ray_tracer",
-    "pattern_editor"
 ]
